@@ -1,6 +1,8 @@
 # compositIA
 
-Fully automatic system to calculate body composition from CT scans. It is composed of three blocks:
+Fully automatic system to calculate body composition from CT scans. 
+
+compositIA consists of three blocks:
 
 * CNN to predict the position of L1 and L3.
 * U-net to segment L1.
