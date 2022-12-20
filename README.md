@@ -1,6 +1,6 @@
 # compositIA
 
-Fully automatic system to calculate body composition from CT scans. 
+Fully automatic system to calculate body composition from toraco-abdominal CT scans.
 
 compositIA consists of three blocks:
 
