@@ -92,39 +92,39 @@ def selectSlices(projection, results, jdata, DATA_DIR, SZ_VOTING_SPACE=[512, 102
 #---------------------------------------------------------------------------------------------
 
 def slicer(volume, spacing, folder, DATA_DIR, MODEL_FILE):
-		# Extracts L1 and L3 slices from the whole CT volume. 
-		# Input: CT volume; 
-		# Output: L1 and L3 slices.
-		print("==== Selecting slices ====")
-		## Save projections
-		sagital, coronal = save_projections(folder, volume, spacing)
-		## INITIALIZATION
-		tf.keras.backend.clear_session()
-		# Prepare and save sliding windows
-		CATALOGUE, TEST_SET, jdata = createWindows(folder, ((0,0), (0,0), (0,0), (0,0)))
-		# Predicts the values for the windows in the test set
-		print('Loading model ... ')
-		model = tf.keras.models.load_model(MODEL_FILE)
-		print(' ... Loaded!')
-		results = model.predict(TEST_SET, batch_size=24, workers=4, verbose=1)
-		# Select slices
-		pred_L1s, pred_L1c, pred_L3s, pred_L3c = selectSlices(sagital, results, jdata, DATA_DIR)
-		#TODO: save an image with the projection and an overlay with the votes
-		print("L1s: "+str(pred_L1s)+"\tL1c: "+str(pred_L1c)+"\tL3s: "+str(pred_L3s)+"\tL3c: "+str(pred_L3c))
-		
-		# using sagital values. not sure why coronal does not work
-		L1idx = round(pred_L1s*spacing[0]/spacing[2])
-		print("L1 idx: "+str(L1idx))
-		L1_slice = volume[:,:,L1idx]
+	# Extracts L1 and L3 slices from the whole CT volume. 
+	# Input: CT volume; 
+	# Output: L1 and L3 slices.
+	print("==== Selecting slices ====")
+	## Save projections
+	sagital, coronal = save_projections(folder, volume, spacing)
+	## INITIALIZATION
+	tf.keras.backend.clear_session()
+	# Prepare and save sliding windows
+	CATALOGUE, TEST_SET, jdata = createWindows(folder, ((0,0), (0,0), (0,0), (0,0)))
+	# Predicts the values for the windows in the test set
+	print('Loading model ... ')
+	model = tf.keras.models.load_model(MODEL_FILE)
+	print(' ... Loaded!')
+	results = model.predict(TEST_SET, batch_size=24, workers=4, verbose=1)
+	# Select slices
+	pred_L1s, pred_L1c, pred_L3s, pred_L3c = selectSlices(sagital, results, jdata, DATA_DIR)
+	#TODO: save an image with the projection and an overlay with the votes
+	print("L1s: "+str(pred_L1s)+"\tL1c: "+str(pred_L1c)+"\tL3s: "+str(pred_L3s)+"\tL3c: "+str(pred_L3c))
 
-		L3idx = round(pred_L3s*spacing[0]/spacing[2])
-		print("L3 idx: "+str(L3idx))
-		L3_slice = volume[:,:,L3idx]
+	# using sagital values. not sure why coronal does not work
+	L1idx = round(pred_L1s*spacing[0]/spacing[2])
+	print("L1 idx: "+str(L1idx))
+	L1_slice = volume[:,:,L1idx]
 
-		plt.imsave(DATA_DIR+os.path.sep+'L3slice.png',L3_slice,cmap='gray')
-		plt.imsave(DATA_DIR+os.path.sep+'L1slice.png',np.fliplr(L1_slice),cmap='gray')
+	L3idx = round(pred_L3s*spacing[0]/spacing[2])
+	print("L3 idx: "+str(L3idx))
+	L3_slice = volume[:,:,L3idx]
 
-		return L1_slice, L3_slice
+	plt.imsave(DATA_DIR+os.path.sep+'L3slice.png',L3_slice,cmap='gray')
+	plt.imsave(DATA_DIR+os.path.sep+'L1slice.png',np.fliplr(L1_slice),cmap='gray')
+
+	return L1_slice, L3_slice
 
 #---------------------------------------------------------------------------------------------
 
