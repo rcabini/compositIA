@@ -1,6 +1,3 @@
-###########################################################################
-# Tests the trained network on a single patient                           #
-###########################################################################
 import sys, os 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import numpy as np
