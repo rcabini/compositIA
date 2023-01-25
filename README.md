@@ -2,7 +2,7 @@
 
 Fully automatic system to calculate body composition from toraco-abdominal CT scans.
 
-compositIA consists of three blocks:
+**CompositIA** consists of three blocks:
 
 * CNN to predict the position of L1 and L3.
 * U-net to segment the L1 vertebra from the CT slice at the L1 spinal level. The L1 segmentation is composed of two different regions: spungiosa tissue (spun) and cortical tissue (cort).
