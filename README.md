@@ -1,4 +1,4 @@
-# compositIA
+# CompositIA
 
 Fully automatic system to calculate body composition from toraco-abdominal CT scans.
 
