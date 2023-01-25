@@ -81,18 +81,17 @@ def import_images(img_path, seg_path, img_save_path, seg_save_path, prefix = "pr
 
 #---------------------------------------------------------------------------
 
-
 def main():
-    img_save_path = "../DATA_input/img"
-    seg_save_path = "../DATA_input/seg"
-    img_path = glob("../DataNIFTI/Images/*")
-    seg_path = "../DataNIFTI/Segmentations/"
+    img_save_path = "../../DATA_input/img"
+    seg_save_path = "../../DATA_input/seg"
+    img_path = glob("../../DataNIFTI/Images/*")
+    seg_path = "../../DataNIFTI/Segmentations/"
 
     for p in img_path:
+        base = str(os.path.basename(p)).split(".nii")[0]
+        i_path = os.path.join(img_save_path, base + ".nii.gz")
+        s_path = os.path.join(seg_path, base + ".nii.gz")
         try:
-            base = str(os.path.basename(p))
-            i_path = glob(os.path.join(p, "*.nii.gz"))[0]
-            s_path = glob(os.path.join(seg_path, base, "*.nii.gz"))[0]
             print(base, i_path, s_path)
             import_images(i_path, s_path, img_save_path, seg_save_path, base)
         except:
