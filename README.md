@@ -15,5 +15,5 @@ L3 U-net weights are available at this [link](https://drive.google.com/file/d/1w
 ## Python environment
 
 ```
-conda create --name 3Dnet --file requirements.txt
+conda create --name tf --file requirements.txt
 ```
