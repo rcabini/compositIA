@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow import keras
 from tensorflow.keras.utils import img_to_array, load_img
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from model_depth_4 import dice_coef, unet
 import imageio
 import matplotlib.pyplot as plt
