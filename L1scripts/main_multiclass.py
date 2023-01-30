@@ -28,27 +28,8 @@ import scipy.misc as sc
 
 #---------------------------------------------------------------------------
 
-def adjustData(img,mask,flag_multi_class,num_class):
-    if(flag_multi_class):
-        img = img / 255
-        mask = mask[:,:,:,0] if(len(mask.shape) == 4) else mask[:,:,0]
-        mask = mask / 255 * (num_class-1)
-        new_mask = np.zeros(mask.shape + (num_class,))
-        for i in range(num_class):
-            new_mask[mask == i,i] = 1
-        new_mask = np.reshape(new_mask,(new_mask.shape[0],new_mask.shape[1],new_mask.shape[2],new_mask.shape[3])) if flag_multi_class else np.reshape(new_mask,(new_mask.shape[0],new_mask.shape[1],new_mask.shape[2]))
-        mask = new_mask
-    elif(np.max(img) > 1):
-        img = img / 255
-        mask = mask /255
-        mask[mask > 0.5] = 1
-        mask[mask <= 0.5] = 0
-    return (img,mask)
-
-#---------------------------------------------------------------------------
-
 def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image_color_mode = "grayscale",
-                    mask_color_mode = "grayscale",image_save_prefix  = "image",mask_save_prefix  = "mask",
+                    mask_color_mode = "rgb",image_save_prefix  = "image",mask_save_prefix  = "mask",
                     flag_multi_class = True,n_class = n_class,save_to_dir = None,target_size = img_size,seed = 1):
     '''
     can generate image and mask at the same time
@@ -81,21 +62,21 @@ def trainGenerator(batch_size,train_path,image_folder,mask_folder,aug_dict,image
         seed = seed)
     train_generator = zip(image_generator, mask_generator)
     for (img,mask) in train_generator:
-        img,mask = adjustData(img,mask,flag_multi_class,num_class=n_class)
+        #img,mask = adjustData(img,mask,flag_multi_class,num_class=n_class)
         yield (img,mask)
         
 #---------------------------------------------------------------------------
 
 def valGenerator(batch_size,val_path,image_folder,mask_folder,image_color_mode = "grayscale",
-                 mask_color_mode = "grayscale",image_save_prefix  = "image",mask_save_prefix  = "mask",
+                 mask_color_mode = "rgb",image_save_prefix  = "image",mask_save_prefix  = "mask",
                  flag_multi_class = True,n_class = n_class,save_to_dir = None,target_size = img_size,seed = 1):
     '''
     can generate image and mask at the same time
     use the same seed for image_datagen and mask_datagen to ensure the transformation for image and mask is the same
     if you want to visualize the results of generator, set save_to_dir = "your path"
     '''
-    image_datagen = ImageDataGenerator()
-    mask_datagen = ImageDataGenerator()
+    image_datagen = ImageDataGenerator(rescale=1./255)
+    mask_datagen = ImageDataGenerator(rescale=1./255)
     image_generator = image_datagen.flow_from_directory(
         val_path,
         classes = [image_folder],
@@ -120,12 +101,12 @@ def valGenerator(batch_size,val_path,image_folder,mask_folder,image_color_mode =
         seed = seed)
     val_generator = zip(image_generator, mask_generator)
     for (img,mask) in val_generator:
-        img,mask = adjustData(img,mask,flag_multi_class,num_class=n_class)
+        #img,mask = adjustData(img,mask,flag_multi_class,num_class=n_class)
         yield (img,mask)
 
 #---------------------------------------------------------------------------
         
-data_gen_args = dict(#rescale=1./255, #intensity normalization
+data_gen_args = dict(rescale=1./255, #intensity normalization
                      rotation_range=0.5,
                      width_shift_range=0.3,
                      height_shift_range=0.3,
@@ -192,7 +173,7 @@ def main():
     VALIDATION_STEPS = N_VALID // BATCH_SIZE
     history = model.fit(train_gen,
               validation_data=val_gen,
-              epochs=300,
+              epochs=100,
               steps_per_epoch=STEPS_PER_EPOCH,
               validation_steps=VALIDATION_STEPS,
               verbose=1, 

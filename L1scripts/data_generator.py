@@ -54,19 +54,18 @@ def import_images(img_path, seg_path, img_save_path, seg_save_path, prefix = "pr
         s_img = img[:,:,k]
         s_seg = seg[:,:,k]
         if s_img.shape==s_seg.shape:
-            #rgb_seg = np.zeros((s_seg.shape[0], s_seg.shape[1], 4))
-            #rgb_seg[:,:,1] = (s_seg==4)
-            #rgb_seg[:,:,2] = (s_seg==5)
-            #rgb_seg[:,:,3] = (s_seg==6)
-            #rgb_seg[:,:,0] = 1-((s_seg==4) | (s_seg==4) | (s_seg==6))
-            #rgb_seg = rgb_seg*255
+            rgb_seg = np.zeros((s_seg.shape[0], s_seg.shape[1], 3))
+            rgb_seg[:,:,1] = (s_seg==1)
+            rgb_seg[:,:,2] = (s_seg==2)
+            rgb_seg[:,:,0] = 1-((s_seg==1) | (s_seg==2))
+            rgb_seg = rgb_seg*255
             #plt.imshow(rgb_seg)
             #plt.show()
             
-            rgb_seg = np.zeros((s_seg.shape[0], s_seg.shape[1]))
-            rgb_seg[s_seg==1] = 1
-            rgb_seg[s_seg==2] = 2
-            rgb_seg = rgb_seg * 255 / 2
+            #rgb_seg = np.zeros((s_seg.shape[0], s_seg.shape[1]))
+            #rgb_seg[s_seg==1] = 1
+            #rgb_seg[s_seg==2] = 2
+            #rgb_seg = rgb_seg * 255 / 2
 
             rgb_img = windower(s_img, -1024, 500)
             
