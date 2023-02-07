@@ -25,6 +25,6 @@ def plotL1(L1slice, seg, DATA_DIR):
 	# RGB image with L1 segmentations
 	L1slice = windower(L1slice, L1slice.min(), L1slice.max())
 	img = np.repeat(L1slice[...,None],3,axis=-1).astype(np.ubyte)
-	img[:,:,0] = np.maximum(L1slice, seg[:,:,0]*255)
-	img[:,:,1] = np.maximum(L1slice, seg[:,:,1]*255)
+	img[:,:,1] = np.maximum(L1slice, seg[:,:,0]*255)
+	img[:,:,0] = np.maximum(L1slice, seg[:,:,1]*255)
 	plt.imsave(os.path.join(DATA_DIR,'pred_L1slice.png'),img)
