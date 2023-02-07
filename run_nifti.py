@@ -85,7 +85,7 @@ def selectSlices(projection, results, jdata, DATA_DIR, SZ_VOTING_SPACE=[512, 102
 	#plt.imsave(DATA_DIR+os.path.sep+'test_L3_cor_smoothed.png',scoresL3c_smoothed,cmap='gray')
 
 	# save an image with the projection and an overlay with the votes
-	plotL1L3(projection[:,:,0], scoresL1s_smoothed, scoresL3s_smoothed, DATA_DIR)
+	plotL1L3(projection[:SZ_VOTING_SPACE[0],:SZ_VOTING_SPACE[1],0], scoresL1s_smoothed, scoresL3s_smoothed, DATA_DIR)
 	
 	return pred_L1s, pred_L1c, pred_L3s, pred_L3c
 
@@ -122,7 +122,7 @@ def slicer(volume, spacing, folder, DATA_DIR, MODEL_FILE):
 	L3_slice = volume[:,:,L3idx]
 
 	plt.imsave(DATA_DIR+os.path.sep+'L3slice.png',L3_slice,cmap='gray')
-	plt.imsave(DATA_DIR+os.path.sep+'L1slice.png',np.fliplr(L1_slice),cmap='gray')
+	plt.imsave(DATA_DIR+os.path.sep+'L1slice.png',L1_slice,cmap='gray')
 
 	return L1_slice, L3_slice
 
@@ -168,17 +168,17 @@ def L1segmentation(img, DATA_DIR, MODEL_L1):
 	im_width, im_height = img.shape #(512, 512)
 
 	print('Loading model ... ')
-	model = tf.keras.models.load_model(MODEL_L1)
+	model = tf.keras.models.load_model(MODEL_L1, custom_objects={"dice_coef": dice_coef })
 	print(' ... Loaded!')
 	X = np.zeros((1, im_height, im_width, 1), dtype=np.float32)
-	X[0,:,:,0] = windower(img, img.min(), img.max()) / 255
+	X[0,:,:,0] = windower(img, -1024, 500) / 255 #windower(img, img.min(), img.max()) / 255
 
 	results = model.predict(X, verbose=1)
 	res_seg = np.round(results)[0,:,:,:]
 
 	plotL1(img, res_seg, DATA_DIR)
 	#plt.imsave(DATA_DIR+'/pred_L1.png', res_seg, cmap='gray')
-	cort, spun = res_seg[:,:,0].astype(int), res_seg[:,:,1].astype(int)
+	cort, spun = res_seg[:,:,2].astype(int), res_seg[:,:,1].astype(int)
 	return cort, spun
 
 #---------------------------------------------------------------------------------------------
@@ -213,20 +213,23 @@ def main(args):
 	cort, L1_mask = L1segmentation(np.fliplr(L1_slice), DATA_DIR, MODEL_L1)
 	## L3 segmentation
 	VAT_mask, SAT_mask, SMA_mask = L3segmentation(L3_slice, DATA_DIR, MODEL_L3)
-
+	
 	## Compute scores
 	# calculate the scores and write them as a list 
 	# of numbers separated by , in DATA_DIR+'/'+'scores.txt'
-	areaL3SAT = np.sum(np.sum(SAT_mask))*(spacing[0]*spacing[0])*0.01
-	densitystdL3SAT = np.std(L3_slice[SAT_mask].flatten())
-	areaL3VAT = np.sum(np.sum(VAT_mask))*(spacing[0]*spacing[0])*0.01
-	areaL3SMA = np.sum(np.sum(SMA_mask))*(spacing[0]*spacing[0])*0.01
+	areaL3SAT = np.sum(SAT_mask.flatten())*(spacing[0]*spacing[0])*0.01
+	densitystdL3SAT = np.std(L3_slice[SAT_mask==1].flatten())
+	areaL3VAT = np.sum(VAT_mask.flatten())*(spacing[0]*spacing[0])*0.01
+	areaL3SMA = np.sum(SMA_mask.flatten())*(spacing[0]*spacing[0])*0.01
 
-	L1_mask = np.fliplr(L1_mask)
-	L1_slice_spungiosa = L1_slice[L1_mask]
+	L1_slice_spungiosa = L1_slice[L1_mask==1]
 	densitystdL1spungiosa = np.std(L1_slice_spungiosa.flatten())
 	densityavgL1spungiosa = np.mean(L1_slice_spungiosa.flatten())
-	areaL1spungiosa = np.sum(np.sum(L1_mask))*(spacing[0]*spacing[0])*0.01
+	print(L1_slice[L1_mask==1].mean())
+	print(L3_slice[SAT_mask==1].mean())
+	print(L3_slice[SMA_mask==1].mean())
+	print(L3_slice[VAT_mask==1].mean())
+	areaL1spungiosa = np.sum(L1_mask.flatten())*(spacing[0]*spacing[0])*0.01
 
 	strScores = str(round(densityavgL1spungiosa, 1))+" "+ \
 	            str(round(densitystdL1spungiosa, 1))+" "+ \
@@ -236,7 +239,7 @@ def main(args):
 			    str(round(areaL3VAT,1))+" "+ \
 			    str(round(densitystdL3SAT, 1))
 	print(DATA_DIR+'/'+'scores.txt')
-	f = open(DATA_DIR+'/'+'scores.txt', "a")
+	f = open(DATA_DIR+'/'+'scores.txt', "w")
 	f.write(strScores)
 	f.close()
 
