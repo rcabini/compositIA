@@ -1,16 +1,16 @@
-# Ignora i file di sistema
+# Ignore system files
 __pycache__
 
-# Ignora la cartella dei pesi
+# Ignore the weight directory
 */weights
 
-# Ignora le cartelle dei risultati
+# Ignore the results directory
 */*/
 
-# Ignora tutti i file run_nifti_*
+# Ignore run_nifti_*
 run_nifti_OLD.py
 run_nifti_RAF.py
 
-# Ignora i file jupiter
+# Ignore jupiter files
 *.ipynb
 
