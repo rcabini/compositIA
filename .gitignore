@@ -9,6 +9,7 @@ __pycache__
 
 #Ignore xlsx
 *xlsx
+*/*xlsx
 
 # Ignore run_nifti_*
 run_nifti_OLD.py
