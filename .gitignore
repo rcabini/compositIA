@@ -7,6 +7,9 @@ __pycache__
 # Ignore the results directory
 */*/
 
+#Ignore xlsx
+*xlsx
+
 # Ignore run_nifti_*
 run_nifti_OLD.py
 run_nifti_RAF.py
