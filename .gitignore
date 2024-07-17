@@ -13,7 +13,7 @@ __pycache__
 
 #Ignore txt
 *txt
-*/*txt
+slicer/k-fold-test.txt
 
 # Ignore run_nifti_*
 run_nifti_OLD.py
