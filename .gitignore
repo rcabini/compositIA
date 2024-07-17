@@ -8,12 +8,11 @@ __pycache__
 */*/
 
 #Ignore xlsx
-*xlsx
-*/*xlsx
+*.xlsx
+*/*.xlsx
 
 #Ignore txt
-*txt
-slicer/k-fold-test.txt
+*.txt
 
 # Ignore run_nifti_*
 run_nifti_OLD.py
