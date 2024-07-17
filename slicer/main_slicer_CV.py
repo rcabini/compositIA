@@ -111,7 +111,7 @@ def load_dataset(exceldir, k, WINDOW_SIZE, BATCH_SIZE):
 def train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE, epochs, k):
     #Add a callback for saving model
     model_checkpoint = ModelCheckpoint(os.path.join(WEIGHTS_DIR, 'Unet_kfold{}.hdf5'.format(k)), monitor='val_mean_absolute_error',verbose=1, save_best_only=True)
-    model.compile(loss="mean_squared_error", optimizer=Adam(learning_rate = 1e-4), metrics=["mean_absolute_error"])
+    model.compile(loss="mean_squared_error", optimizer=Adam(learning_rate = 1e-3), metrics=["mean_absolute_error"])
     
     STEPS_PER_EPOCH = DATASET_SIZE[0] // BATCH_SIZE
     VALIDATION_STEPS = DATASET_SIZE[1] // BATCH_SIZE
@@ -135,28 +135,26 @@ def main():
     DATA_PATH = '/home/debian/compositIA/GitHub/compositIA/slicer/dataset.xlsx'
     WEIGHTS_DIR = '/home/debian/compositIA/GitHub/compositIA/slicer/weights'
     os.makedirs(WEIGHTS_DIR, exist_ok=True)
-    file1 = open('/home/debian/compositIA/compositIA/multires_2024/k-fold-test.txt', 'r')
-    Lines = file1.readlines()
+    Folds = pd.read_csv('/home/debian/compositIA/GitHub/compositIA/slicer/k-fold-test.txt', sep=" ", header=None)
         
     BATCH_SIZE = 4
-    EPOCHS = 2000
+    EPOCHS = 800
     WINDOW_SIZE = (128, 256, 3) 
     K_FOLDS = 5
     
-    for k, TEST_NAME in enumerate(Lines):
-        if k>=0:
-            print("Fold {}/{}".format(k+1, K_FOLDS))
-            TEST_NAME = [ff.replace("'", "").replace(" ", "").replace("[", "").replace("]", "").replace("\n", "") for ff in TEST_NAME.split(',')]
-        
-            train_gen, val_gen, DATASET_SIZE = load_dataset(DATA_PATH, k, (WINDOW_SIZE[0],WINDOW_SIZE[1]), BATCH_SIZE)
-            model = MultiResUnet(height=WINDOW_SIZE[0], width=WINDOW_SIZE[1], n_channels=WINDOW_SIZE[2])
-            model.summary()
-            #for fine-learning
-            #model = tf.keras.models.load_model(WEIGHTS_DIR +os.path.sep+'Unet_kfold{}.hdf5'.format(k))
-            #Fit the model
-            model, history = train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE, EPOCHS, k)         
-            plot_history(history, WEIGHTS_DIR, k)
-            tf.keras.backend.clear_session()
+    for k, TEST_NAME in Folds.iterrows():
+        print("Fold {}/{}".format(k+1, K_FOLDS))
+        TEST_NAME = TEST_NAME.values
+    
+        train_gen, val_gen, DATASET_SIZE = load_dataset(DATA_PATH, k, (WINDOW_SIZE[0],WINDOW_SIZE[1]), BATCH_SIZE)
+        model = MultiResUnet(height=WINDOW_SIZE[0], width=WINDOW_SIZE[1], n_channels=WINDOW_SIZE[2])
+        model.summary()
+        #for fine-learning
+        #model = tf.keras.models.load_model(WEIGHTS_DIR +os.path.sep+'Unet_kfold{}.hdf5'.format(k))
+        #Fit the model
+        model, history = train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE, EPOCHS, k)         
+        plot_history(history, WEIGHTS_DIR, k)
+        tf.keras.backend.clear_session()
     
     # Retrain the model on the complete dataset
     k='ALL'
@@ -166,7 +164,6 @@ def main():
     model, history = train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE, EPOCHS, k)         
     plot_history(history, WEIGHTS_DIR, k)
     tf.keras.backend.clear_session()
-    
     
 if __name__=="__main__":
     main()

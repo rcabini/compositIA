@@ -41,13 +41,12 @@ def main():
     os.makedirs(res_path, exist_ok=True)
     os.makedirs(cort_path, exist_ok=True)
     os.makedirs(spung_path, exist_ok=True)
-    file1 = open('/home/debian/compositIA/compositIA/multires_2024/k-fold-test.txt', 'r')
-    Lines = file1.readlines()
+    Folds = pd.read_csv('/home/debian/compositIA/GitHub/compositIA/slicer/k-fold-test.txt', sep=" ", header=None)
 
     print('Finding images ... ')
     row = []
-    for k, TEST_NAME in enumerate(Lines):
-        TEST_NAME = [ff.replace("'", "").replace(" ", "").replace("[", "").replace("]", "").replace("\n", "") for ff in TEST_NAME.split(',')]
+    for k, TEST_NAME in Folds.iterrows():
+        TEST_NAME = TEST_NAME.values
         tf.keras.backend.clear_session()
         MODEL_PATH = os.path.join(weights_path, 'unet_L1_k{}.hdf5'.format(k))
         print('Loading model ... ')

@@ -11,6 +11,10 @@ __pycache__
 *xlsx
 */*xlsx
 
+#Ignore txt
+*txt
+*/*txt
+
 # Ignore run_nifti_*
 run_nifti_OLD.py
 run_nifti_RAF.py
