@@ -54,7 +54,7 @@ def import_images(img_path, seg_path, img_save_path, seg_save_path, prefix = "pr
 
 #---------------------------------------------------------------------------
 
-def main():
+def main(args):
     img_save_path = os.path.join(args.output_folder, "image/")
     seg_save_path = os.path.join(args.output_folder, "label/")
     os.makedirs(img_save_path, exist_ok=True)

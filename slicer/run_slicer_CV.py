@@ -26,7 +26,7 @@ def draw_center(buff_s, results, centers, GTcenters, dstFolder, base):
 
 #---------------------------------------------------------------------------
 
-def main():
+def main(args):
 
     im_height, im_width, im_ch = (512, 1024, 3)
     input_size = (128, 256, 3)
