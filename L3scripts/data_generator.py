@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import skimage.io as io
 from skimage import img_as_ubyte
 from glob import glob
+import argparse
 from utils.windower import windower
 
 #---------------------------------------------------------------------------
@@ -54,12 +55,12 @@ def import_images(img_path, seg_path, img_save_path, seg_save_path, prefix = "pr
 #---------------------------------------------------------------------------
 
 def main():
-    img_save_path = "./DATA/image"
-    seg_save_path = "./DATA/label"
+    img_save_path = os.path.join(args.output_folder, "image/")
+    seg_save_path = os.path.join(args.output_folder, "label/")
     os.makedirs(img_save_path, exist_ok=True)
     os.makedirs(seg_save_path, exist_ok=True)
-    img_path = glob("/home/debian/compositIA/DataNIFTI/Images/*")
-    seg_path = "/home/debian/compositIA/DataNIFTI/Segmentations/"
+    img_path = glob(os.path.join(args.data_folder, "Images/*"))
+    seg_path = os.path.join(args.data_folder, "Segmentations/")
 
     for p in img_path:
         try:
@@ -71,4 +72,10 @@ def main():
             print("ERROR: ", p)
 
 if __name__=="__main__":
-    main()
+    
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("output_folder", help='Path to output')
+	args = parser.parse_args()
+	main(args)

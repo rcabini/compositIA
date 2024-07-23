@@ -12,6 +12,7 @@ from glob import glob
 import pandas as pd
 from scipy import ndimage
 from utils.aug import *
+import argparse
 
 FIXED_SIZE = [512, 1024]
 
@@ -124,42 +125,48 @@ def import_images(img_path, seg_path, dstFolder, gtrFolder, prevFolder, prefix =
 
 #---------------------------------------------------------------------------
 
-def main():
+def main(args):
 
-    img_path = "/home/debian/compositIA/DataNIFTI/Images/"
-    seg_path = "/home/debian/compositIA/DataNIFTI/Segmentations/"
-    dstFolder = "./DATA/image"
-    gtrFolder = "./DATA/label"
-    prevFolder = "./DATA/prev"
+    img_path = os.path.join(args.data_folder, "Images/")
+    seg_path = os.path.join(args.data_folder, "Segmentations/")
+    dstFolder = os.path.join(args.output_folder, "image/")
+    gtrFolder = os.path.join(args.output_folder, "label/")
+    prevFolder = os.path.join(args.output_folder, "prev/")
     os.makedirs(dstFolder, exist_ok=True)
     os.makedirs(gtrFolder, exist_ok=True)
     os.makedirs(prevFolder, exist_ok=True)
-    file1 = open('/home/debian/compositIA/compositIA/multires_2024/k-fold-test.txt', 'r')
-    Lines = file1.readlines()
+    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
+    K_FOLDS = len(Folds)#5
     
-    K_FOLDS = 5
+    K_FOLDS = len(Lines)
     ns = [os.path.basename(f) for f in glob(img_path+'*')]
     tot = []
     i = 0
-    for k, TEST_NAME in enumerate(Lines):
-        if k>=0:
-            print("Fold {}/{}".format(k+1, K_FOLDS))
-            TEST_NAME = [ff.replace("'", "").replace(" ", "").replace("[", "").replace("]", "").replace("\n", "") for ff in TEST_NAME.split(',')]
-            print(TEST_NAME)
-            
-            for base in TEST_NAME:
-                print(base)
-                try:
-                    i_path = glob(os.path.join(img_path, base, "*.nii.gz"))[0]
-                    s_path = glob(os.path.join(seg_path, base, "*.nii.gz"))[0]
-                    lista = import_images(i_path, s_path, dstFolder, gtrFolder, prevFolder, base, aug=True)
-                    for l in lista:
-                        tot.append([k]+l)
-                    i+=1
-                except: print(base, "ERROR")
+    for k, TEST_NAME in Folds.iterrows():
+        TEST_NAME = TEST_NAME.values
+        print("Fold {}/{}".format(k+1, K_FOLDS))
+        
+        for base in TEST_NAME:
+            print(base)
+            try:
+                i_path = glob(os.path.join(img_path, base, "*.nii.gz"))[0]
+                s_path = glob(os.path.join(seg_path, base, "*.nii.gz"))[0]
+                lista = import_images(i_path, s_path, dstFolder, gtrFolder, prevFolder, base, aug=True)
+                for l in lista:
+                    tot.append([k]+l)
+                i+=1
+            except: print(base, "ERROR")
     df=pd.DataFrame(tot, columns=['k', 'image', 'label'])
-    df.to_excel("./dataset.xlsx", index=False)
+    df.to_excel(os.path.join(args.output_folder, "dataset.xlsx"), index=False)
     print('Total number of images:', i)
+
 if __name__=="__main__":
-    main()
+    
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
+	parser.add_argument("output_folder", help='Path to output')
+	args = parser.parse_args()
+	main(args)
 

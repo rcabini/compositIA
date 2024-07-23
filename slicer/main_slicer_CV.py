@@ -7,6 +7,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import argparse
 from multiUnet import *
 
 #---------------------------------------------------------------------------
@@ -130,17 +131,17 @@ def train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE
     
 #---------------------------------------------------------------------------
 
-def main():    
+def main(args):    
     tf.keras.backend.clear_session()
-    DATA_PATH = '/home/debian/compositIA/GitHub/compositIA/slicer/dataset.xlsx'
-    WEIGHTS_DIR = '/home/debian/compositIA/GitHub/compositIA/slicer/weights'
+    DATA_PATH = os.path.join(args.data_folder, "dataset.txt")
+    WEIGHTS_DIR = args.weights_folder
     os.makedirs(WEIGHTS_DIR, exist_ok=True)
-    Folds = pd.read_csv('/home/debian/compositIA/GitHub/compositIA/slicer/k-fold-test.txt', sep=" ", header=None)
+    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
+    K_FOLDS = len(Folds)#5
         
     BATCH_SIZE = 4
     EPOCHS = 800
     WINDOW_SIZE = (128, 256, 3) 
-    K_FOLDS = 5
     
     for k, TEST_NAME in Folds.iterrows():
         print("Fold {}/{}".format(k+1, K_FOLDS))
@@ -166,6 +167,14 @@ def main():
     tf.keras.backend.clear_session()
     
 if __name__=="__main__":
-    main()
+    
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
+	parser.add_argument("weights_folder", help='Path to output weights')
+	parser.add_argument("output_folder", help='Path to output')
+	args = parser.parse_args()
+	main(args)
     
     

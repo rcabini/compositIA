@@ -2,13 +2,14 @@ import os, sys
 import numpy as np
 from sklearn.model_selection import KFold
 from glob import glob
+import argparse
 
 #---------------------------------------------------------------------------
 
-def main():
-    names = [os.path.basename(f) for f in glob('/home/debian/compositIA/DataNIFTI/Images/*')]
-    f = open('k-fold-test.txt', 'w')
-    K_FOLDS = 5
+def main(args):
+    names = [os.path.basename(f) for f in glob(os.path.join(args.data_folder, "Images/*"))]
+    f = open(os.path.join(args.data_folder, 'k-fold-test.txt'), 'w')
+    K_FOLDS = args.k
     kf = KFold(n_splits=K_FOLDS, random_state=33, shuffle=True)
     
     for k, (train_index, test_index) in enumerate(kf.split(names)):
@@ -17,5 +18,10 @@ def main():
 
 
 if __name__=="__main__":
-    main()
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("k", help='Numer of k-folds')
+	args = parser.parse_args()
+	main(args)
 

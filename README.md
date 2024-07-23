@@ -57,14 +57,14 @@ CompositIA was trained and tested by using a k-fold cross-validation strategy. T
     cd utils
     python k-fold_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/ --k 5
 
-Replace `path_to_Dataset` with the actual path to the Dataset folder. The default number of folds (`k`) is 5.
+This command generates the `k-fold-test.txt` file, which lists the filenames of the test set for each k-fold. Replace `path_to_Dataset` with the actual path to the Dataset folder. The default number of folds (`k`) is 5.
 
 To create dataset necessary to train the CompositIA tool you sholud create three different dataset for the three steps:
 
 * To create dataset to train the L1/L3 localization model please run:
 ```
   cd slicer/
-  python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/slicer/
+  python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/slicer/ --ktxt_folder path_to_Dataset/k-fold-test.txt
 ```
 * To create dataset to train the L1 segmentation model:
 ```
@@ -84,17 +84,17 @@ To to train the CompositIA tool you sholud train the three different models:
 * L1/L3 localization model training, run:
 ```
   cd slicer/
-  python main_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/
+  python main_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --ktxt_folder path_to_Dataset/k-fold-test.txt
 ```
 * L1 segmentation training, run:
 ```
   cd L1scripts/
-  python main_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/
+  python main_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --ktxt_folder path_to_Dataset/k-fold-test.txt
 ```
 * L3 segmentation training, run:
 ```
   cd L3scripts/
-  python main_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/
+  python main_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --ktxt_folder path_to_Dataset/k-fold-test.txt
 ```
 
 ### Testing on k-folds
@@ -103,23 +103,17 @@ To to test the CompositIA tool on the k-folds you sholud test the three differen
 * L1/L3 localization model testing, run:
 ```
   cd slicer/
-  python run_slicer_CV.py --data_folder path_to_Dataset/slicer/
-                          --weights_folder ./weights_slicer/
-                          --output_folder ./results_slicer/
+  python run_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --output_folder ./results_slicer/ --ktxt_folder path_to_Dataset/k-fold-test.txt --nifti_folder ./path_to_Dataset/
 ```
 * L1 segmentation testing, run:
 ```
   cd L1scripts/
-  python run_L1_CV.py --data_folder path_to_Dataset/L1/
-                      --weights_folder ./weights_L1/ 
-                      --output_folder ./results_L1/
+  python run_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --output_folder ./results_L1/ --ktxt_folder path_to_Dataset/k-fold-test.txt
 ```
 * L3 segmentation testing, run:
 ```
   cd L3scripts/
-  python run_L3_CV.py --data_folder path_to_Dataset/L3/
-                      --weights_folder ./weights_L3/
-                      --output_folder ./results_L3/
+  python run_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --output_folder ./results_L3/ --ktxt_folder path_to_Dataset/k-fold-test.txt
 ```
 
 ## Run CompositIA on a new dataset

@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import argparse
 from model_L1 import *
 
 #---------------------------------------------------------------------------
@@ -90,21 +91,19 @@ def plot_history(history, results_path, fname):
 
 #-------------------------------------------------------------------------
 
-def main():
+def main(args):
     
     img_size = (512,512)
     n_class=3
-    DATA_PATH = './DATA/'
-    CHECK_PATH = './weights/'
-    os.makedirs(CHECK_PATH, exist_ok=True)
-    K_FOLDS = 5
+    os.makedirs(args.weights_folder, exist_ok=True)
     BATCH_SIZE = 1
     PVAL = 0.2 # percentage of validation
 
     ## Training with K-fold cross validation
-    images_file_paths = glob(os.path.join(DATA_PATH,'image/*.png'))
-    labels_file_paths = glob(os.path.join(DATA_PATH,'label/*.png'))
-    Folds = pd.read_csv('/home/debian/compositIA/GitHub/compositIA/slicer/k-fold-test.txt', sep=" ", header=None)
+    images_file_paths = glob(os.path.join(args.data_folder,'image/*.png'))
+    labels_file_paths = glob(os.path.join(args.data_folder,'label/*.png'))
+    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
+    K_FOLDS = len(Folds)#5
     
     df = pd.DataFrame(data={"filename": images_file_paths, 'mask' : labels_file_paths})
     
@@ -130,7 +129,7 @@ def main():
         model = unet(input_size=(img_size[0],img_size[1],1), n_class=n_class)
         model.summary()
         #Fit the u-net model
-        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(os.path.join(CHECK_PATH, 'unet_L1_k{}.hdf5'.format(k)),
+        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(os.path.join(args.weights_folder, 'unet_L1_k{}.hdf5'.format(k)),
                                                               monitor='val_dice_coef',
                                                               verbose=1,
                                                               save_best_only=True,
@@ -150,7 +149,7 @@ def main():
                   verbose=1, 
                   callbacks=[model_checkpoint])
                   
-        plot_history(history, CHECK_PATH, 'history_k{}.png'.format(k))
+        plot_history(history, args.weights_folder, 'history_k{}.png'.format(k))
         tf.keras.backend.clear_session()
         
     k = 'ALL'
@@ -173,7 +172,7 @@ def main():
     model.summary()
 
     #Fit the u-net model
-    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(os.path.join(CHECK_PATH, 'unet_L1_k{}.hdf5'.format(k)),
+    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(os.path.join(args.weights_folder, 'unet_L1_k{}.hdf5'.format(k)),
                                                           monitor='val_dice_coef',
                                                           verbose=1,
                                                           save_best_only=True,
@@ -193,8 +192,15 @@ def main():
               verbose=1, 
               callbacks=[model_checkpoint])
               
-    plot_history(history, CHECK_PATH, 'history_k{}.png'.format(k))
+    plot_history(history, args.weights_folder, 'history_k{}.png'.format(k))
     tf.keras.backend.clear_session()
         
 if __name__=="__main__":
-    main()
+    
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
+	parser.add_argument("weights_folder", help='Path to output weights')
+	args = parser.parse_args()
+	main(args)

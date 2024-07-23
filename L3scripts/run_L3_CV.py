@@ -9,6 +9,7 @@ import skimage.transform as trans
 import glob
 import pandas as pd
 import skimage.io as io
+import argparse
 
 #---------------------------------------------------------------------------
 
@@ -28,23 +29,23 @@ def dice_error(y_true, y_pred):
 
 #---------------------------------------------------------------------------
 
-def main():
+def main(args):
 
     im_width, im_height = (512, 512)
     input_size = (512, 512) #(256, 256)
     
-    weights_path = './weights'
-    path = './DATA/image/'
-    seg_path = './DATA/label/'
-    res_path = './weights/res'
-    VAT_path = './weights/VAT'
-    SAT_path = './weights/SAT'
-    SMA_path = './weights/SMA'
+    weights_path = args.weights_folder
+    path = os.path.join(args.data_folder, "image/")
+    seg_path = os.path.join(args.data_folder, "label/")
+    res_path = os.path.join(args.output_folder, "res/")
+    VAT_path = os.path.join(args.output_folder, "VAT/")
+    SAT_path = os.path.join(args.output_folder, "SAT/")
+    SMA_path = os.path.join(args.output_folder, "SMA/")
     os.makedirs(res_path, exist_ok=True)
     os.makedirs(VAT_path, exist_ok=True)
     os.makedirs(SAT_path, exist_ok=True)
     os.makedirs(SMA_path, exist_ok=True)
-    Folds = pd.read_csv('/home/debian/compositIA/GitHub/compositIA/slicer/k-fold-test.txt', sep=" ", header=None)
+    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
 
     print('Finding images ... ')
     row = []
@@ -128,4 +129,11 @@ def main():
     df.to_excel(os.path.join(res_path, "DSC_L3_kfold.xlsx"), index=False) 
 
 if __name__=="__main__":
-    main()
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
+	parser.add_argument("weights_folder", help='Path to weights')
+	parser.add_argument("output_folder", help='Path to output')
+	args = parser.parse_args()
+	main(args)

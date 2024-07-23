@@ -17,7 +17,6 @@ __pycache__
 # Ignore run_nifti_*
 run_nifti_OLD.py
 run_nifti_RAF.py
-run_nifti_lite.py
 
 # Ignore jupiter files
 *.ipynb

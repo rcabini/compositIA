@@ -8,6 +8,7 @@ import glob
 import pandas as pd
 import skimage.io as io
 from skimage.feature import peak_local_max
+import argparse
 from utils.windowed_utils import *
 
 #---------------------------------------------------------------------------
@@ -30,15 +31,15 @@ def main():
     im_height, im_width, im_ch = (512, 1024, 3)
     input_size = (128, 256, 3)
     
-    path = './DATA/image/'
-    seg_path = './DATA/label/'
-    res_path = './weights/res'
-    pred_path = './weights/pred'
+    path = os.path.join(args.data_folder, "image/")
+    seg_path = os.path.join(args.data_folder, "label/")
+    res_path = os.path.join(args.output_folder, "res/")
+    pred_path = os.path.join(args.output_folder, "pred/")
     os.makedirs(res_path, exist_ok=True)
     os.makedirs(pred_path, exist_ok=True)
-    WEIGHTS_PATH = "./weights/"
-    nii_path = '/home/debian/compositIA/DataNIFTI/Images/'
-    Folds = pd.read_csv('/home/debian/compositIA/GitHub/compositIA/slicer/k-fold-test.txt', sep=" ", header=None)
+    WEIGHTS_PATH = args.weights_folder
+    nii_path = os.path.join(args.nifti_folder, "Images/")
+    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
     
     names, kk = [], []
     GT_L1, GT_L3, pred_L1, pred_L3 = [], [], [], []
@@ -131,9 +132,18 @@ def main():
     dfi['dist_L1_ind']=np.array(dist_L1_ind)
     dfi['dist_L3_ind']=np.array(dist_L3_ind)
     print(df)
-    df.to_excel(os.path.join(res_path, "/output_kfold_s15.xlsx"), index=False)
-    dfi.to_excel(os.path.join(res_path, "/output_kfold_s15_idx.xlsx"), index=False) 
+    df.to_excel(os.path.join(res_path, "output_kfold_s15.xlsx"), index=False)
+    dfi.to_excel(os.path.join(res_path, "output_kfold_s15_idx.xlsx"), index=False) 
     
 if __name__=="__main__":
-    main()
+    
+    """Read command line arguments"""
+	parser = argparse.ArgumentParser()
+	parser.add_argument("data_folder", help='Path to dataset')
+	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
+	parser.add_argument("weights_folder", help='Path to weights')
+	parser.add_argument("output_folder", help='Path to output')
+	parser.add_argument("nifti_folder", help='Path to NiFTI CT scans')
+	args = parser.parse_args()
+	main(args)
 
