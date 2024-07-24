@@ -73,7 +73,7 @@ def extract_seg_slice(seg):
 def import_images(img_path):
     ## Read the nifti image
     (img, spacing) = readData(img_path, order=3)
-    ## Read the nifti segmentation## Save projections: extract the 3 windowed channels and resize the image to be isotropic
+    ## Save projections: extract the 3 windowed channels and resize the image to be isotropic
     sagital = projection(img, spacing)
     return sagital, img, spacing
 
