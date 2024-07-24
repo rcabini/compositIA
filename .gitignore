@@ -9,7 +9,6 @@ __pycache__
 
 #Ignore xlsx
 *.xlsx
-*/*.xlsx
 
 #Ignore txt
 *.txt
