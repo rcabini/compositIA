@@ -13,5 +13,5 @@ def windower(data,wmin,wmax):
     dump[dump<=wmin] = wmin
     dump -= wmin
     w = wmax - wmin
-    return dump / w * 255
+    return dump / w * 255.
 

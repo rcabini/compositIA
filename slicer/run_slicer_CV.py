@@ -39,7 +39,7 @@ def main(args):
     os.makedirs(pred_path, exist_ok=True)
     WEIGHTS_PATH = args.weights_folder
     nii_path = os.path.join(args.nifti_folder, "Images/")
-    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
+    Folds = pd.read_csv(args.ktxt, sep=" ", header=None)
     
     names, kk = [], []
     GT_L1, GT_L3, pred_L1, pred_L3 = [], [], [], []
@@ -48,9 +48,9 @@ def main(args):
     print('Finding images ... ')
     row = []
     for k, TEST_NAME in Folds.iterrows():
-        TEST_NAME = TEST_NAME.values
+        TEST_NAME = TEST_NAME.dropna().values
         tf.keras.backend.clear_session()
-        MODEL_PATH = os.path.join(WEIGHTS_PATH, "Unet_kfold{}.hdf5".format(k))
+        MODEL_PATH = os.path.join(WEIGHTS_PATH, "multires_kfold{}.hdf5".format(k))
         print('Loading model ... ')
         model = tf.keras.models.load_model(MODEL_PATH)
         print(' ... Loaded!')
@@ -64,7 +64,6 @@ def main(args):
                 ids.append(fn)
                 #read nifti to get the spacing
                 _ , spacing = readData(os.path.join(nii_path,base,'data.nii.gz'), order=3)
-                print(spacing[0])
                 x_img = io.imread(os.path.join(path, fn), as_gray = False)
                 im_height, im_width = x_img.shape[0], x_img.shape[1]
                 X = np.zeros((1, im_height, im_width, 3), dtype=np.float32)
@@ -136,14 +135,13 @@ def main(args):
     dfi.to_excel(os.path.join(res_path, "output_kfold_s15_idx.xlsx"), index=False) 
     
 if __name__=="__main__":
-    
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
-	parser.add_argument("weights_folder", help='Path to weights')
-	parser.add_argument("output_folder", help='Path to output')
-	parser.add_argument("nifti_folder", help='Path to NiFTI CT scans')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--ktxt", help='Path to k-splits txt file')
+    parser.add_argument("--weights_folder", help='Path to weights')
+    parser.add_argument("--output_folder", help='Path to output')
+    parser.add_argument("--nifti_folder", help='Path to NiFTI CT scans')
+    args = parser.parse_args()
+    main(args)
 

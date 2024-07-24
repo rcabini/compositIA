@@ -1,18 +1,17 @@
+import argparse
 import os, sys
 sys.path.insert(0,'../')
+from glob import glob
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 import cv2
 import nibabel as nib
-import matplotlib.pyplot as plt
 import skimage
-import argparse
+from scipy import ndimage
 from utils.windowed_utils import *
 from utils.windower import windower
-from glob import glob
-import pandas as pd
-from scipy import ndimage
 from utils.aug import *
-import argparse
 
 FIXED_SIZE = [512, 1024]
 
@@ -66,10 +65,8 @@ def import_images(img_path, seg_path, dstFolder, gtrFolder, prevFolder, prefix =
     ## Read the nifti segmentation
     (seg, _) = readData(seg_path, order=0)
     seg = np.round(seg)
-    print(img.shape)
     ## Save projections: extract the 3 windowed channels and resize the image to be isotropic
     sagital = projection(img, spacing)
-    print(sagital.shape)
     returns = []
     spots_L13 = np.zeros((sagital.shape[0],sagital.shape[1],2))
     if img.shape == seg.shape:
@@ -135,19 +132,17 @@ def main(args):
     os.makedirs(dstFolder, exist_ok=True)
     os.makedirs(gtrFolder, exist_ok=True)
     os.makedirs(prevFolder, exist_ok=True)
-    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
-    K_FOLDS = len(Folds)#5
+    Folds = pd.read_csv(args.ktxt, sep=" ", header=None)
+    K_FOLDS = len(Folds)
     
-    K_FOLDS = len(Lines)
     ns = [os.path.basename(f) for f in glob(img_path+'*')]
     tot = []
     i = 0
     for k, TEST_NAME in Folds.iterrows():
-        TEST_NAME = TEST_NAME.values
+        TEST_NAME = TEST_NAME.dropna().values
         print("Fold {}/{}".format(k+1, K_FOLDS))
         
         for base in TEST_NAME:
-            print(base)
             try:
                 i_path = glob(os.path.join(img_path, base, "*.nii.gz"))[0]
                 s_path = glob(os.path.join(seg_path, base, "*.nii.gz"))[0]
@@ -161,12 +156,11 @@ def main(args):
     print('Total number of images:', i)
 
 if __name__=="__main__":
-    
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
-	parser.add_argument("output_folder", help='Path to output')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--ktxt", help='Path to k-splits txt file')
+    parser.add_argument("--output_folder", help='Path to output')
+    args = parser.parse_args()
+    main(args)
 

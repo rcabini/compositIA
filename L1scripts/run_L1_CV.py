@@ -9,6 +9,7 @@ import glob
 import pandas as pd
 import skimage.io as io
 import argparse
+from model_L1 import dice_coef
 
 #---------------------------------------------------------------------------
 
@@ -42,12 +43,12 @@ def main(args):
     os.makedirs(res_path, exist_ok=True)
     os.makedirs(cort_path, exist_ok=True)
     os.makedirs(spung_path, exist_ok=True)
-    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
+    Folds = pd.read_csv(args.ktxt, sep=" ", header=None)
 
     print('Finding images ... ')
     row = []
     for k, TEST_NAME in Folds.iterrows():
-        TEST_NAME = TEST_NAME.values
+        TEST_NAME = TEST_NAME.dropna().values
         tf.keras.backend.clear_session()
         MODEL_PATH = os.path.join(weights_path, 'unet_L1_k{}.hdf5'.format(k))
         print('Loading model ... ')
@@ -116,13 +117,12 @@ def main(args):
     df.to_excel(os.path.join(res_path,"DSC_L1_kfold.xlsx"), index=False)  
     
 if __name__=="__main__":
-    
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
-	parser.add_argument("weights_folder", help='Path to weights')
-	parser.add_argument("output_folder", help='Path to output')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--ktxt", help='Path to k-splits txt file')
+    parser.add_argument("--weights_folder", help='Path to weights')
+    parser.add_argument("--output_folder", help='Path to output')
+    args = parser.parse_args()
+    main(args)
 

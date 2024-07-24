@@ -7,9 +7,9 @@ CompositIA is a fully automated tool designed to calculate body composition from
 **CompositIA** consists of three blocks:
 
 * **`MultiResUNet`** to predict CT slices intersecting the first lumbar vertebra (L1) and third lumbar vertebra (L3).
-* **`$UNet_{L1}$`** to segment the L1 vertebra from the CT slice at the L1 spinal level. The L1 segmentation is composed of two different regions: spungiosa tissue (spun) and cortical tissue (cort).\
-**`$UNet_{L3}$`** to segment the CT slice at the L3 spinal level in the following regions: visceral adipose tissue (VAT), subcutaneous adipose tissue (SAT), skeletal muscle area (SMA).
-* quantification of body composition indices.
+* **`UNetL1`** to segment the L1 vertebra from the CT slice at the L1 spinal level. The L1 segmentation is composed of two different regions: spungiosa tissue (spun) and cortical tissue (cort).\
+**`UNetL3`** to segment the CT slice at the L3 spinal level in the following regions: visceral adipose tissue (VAT), subcutaneous adipose tissue (SAT), skeletal muscle area (SMA).
+* Quantification of body composition indices.
 
 **`MultiResUNet`** is based on the implementation proposed by Ibtehaz, and Sohel Rahman described in this [paper](https://www.sciencedirect.com/science/article/abs/pii/S0893608019302503?via%3Dihub). **`UNet`** is based on the implementation proposed by Ronneberger et al. detailed in the [work](https://arxiv.org/pdf/1505.04597.pdf). 
 All the models are developed using **Tensorflow 2**. 
@@ -60,19 +60,19 @@ CompositIA was trained and tested by using a k-fold cross-validation strategy. T
 
 This command generates the `k-fold-test.txt` file, which lists the filenames of the test set for each k-fold. Replace `path_to_Dataset` with the actual path to the Dataset folder. The default number of folds (`k`) is 5.
 
-To create dataset necessary to train the CompositIA tool you sholud create three different dataset for the three steps:
+To create dataset necessary to train the CompositIA tool you sholud create three different dataset for the three models:
 
-* To create dataset to train the L1/L3 localization model please run:
+* To create dataset to train the L1/L3 localization model, please run:
 ```
   cd slicer/
-  python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/slicer/ --ktxt_folder path_to_Dataset/k-fold-test.txt
+  python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/slicer/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
-* To create dataset to train the L1 segmentation model:
+* To create dataset to train the L1 segmentation model, please run:
 ```
   cd L1scripts/
   python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/L1/
 ```
-* To create dataset to train the L3 segmentation model:
+* To create dataset to train the L3 segmentation model, please run:
 ```
   cd L3scripts/
   python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/L3/
@@ -85,17 +85,17 @@ To to train the CompositIA tool you sholud train the three different models:
 * L1/L3 localization model training, run:
 ```
   cd slicer/
-  python main_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --ktxt_folder path_to_Dataset/k-fold-test.txt
+  python main_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * L1 segmentation training, run:
 ```
   cd L1scripts/
-  python main_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --ktxt_folder path_to_Dataset/k-fold-test.txt
+  python main_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * L3 segmentation training, run:
 ```
   cd L3scripts/
-  python main_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --ktxt_folder path_to_Dataset/k-fold-test.txt
+  python main_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 
 ### Testing on k-folds
@@ -104,17 +104,17 @@ To to test the CompositIA tool on the k-folds you sholud test the three differen
 * L1/L3 localization model testing, run:
 ```
   cd slicer/
-  python run_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --output_folder ./results_slicer/ --ktxt_folder path_to_Dataset/k-fold-test.txt --nifti_folder ./path_to_Dataset/
+  python run_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --output_folder ./results_slicer/ --ktxt path_to_Dataset/k-fold-test.txt --nifti_folder ./path_to_Dataset/
 ```
 * L1 segmentation testing, run:
 ```
   cd L1scripts/
-  python run_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --output_folder ./results_L1/ --ktxt_folder path_to_Dataset/k-fold-test.txt
+  python run_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --output_folder ./results_L1/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * L3 segmentation testing, run:
 ```
   cd L3scripts/
-  python run_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --output_folder ./results_L3/ --ktxt_folder path_to_Dataset/k-fold-test.txt
+  python run_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --output_folder ./results_L3/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 
 ## Run CompositIA on a new dataset
@@ -125,16 +125,16 @@ To run the complete CompositIA tool on a new thoraco-abdominal CT scan, you shou
 
 where `path_to_input` is the path to the input NIfTI CT and `path_to_output` is the path to the output directory where all the results will be saved. The output directory includes: 
 
-* `scores.json`: contains the body composition indices computed by CompositIA.;
+* `scores.json`: contains the body composition indices computed by CompositIA;
 * `planes.png`: highlights the predicted position of L1 and L3 planes;
 * `L1slice.png` and `L3slice.png`: extracted slices of the CT scan;
 * `L1segmentation.png` and `L3segmentation.png`: segmentations predicted by CompositIA. 
 
 To run the complete CompositIA tool by using custom weights, please run:
 
-    python CompositIA.py --input_image path_to_input/data.nii.gz 
-                         --output_path path_to_output/
-                         --weighs_slicer path_to_weights_slicer/weights.hdf5
+    python CompositIA.py --input_path path_to_input/data.nii.gz 
+                         --output_folder path_to_output/
+                         --weights_slicer path_to_weights_slicer/weights.hdf5
                          --weights_L1 path_to_weights_L1/weights.hdf5
                          --weights_L3 path_to_weights_L3/weights.hdf5
 

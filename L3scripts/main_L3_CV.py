@@ -123,13 +123,13 @@ def main(args):
     ## Training with K-fold cross validation
     images_file_paths = glob(os.path.join(args.data_folder,'image/*.png'))
     labels_file_paths = glob(os.path.join(args.data_folder,'label/*.png'))
-    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
-    K_FOLDS = len(Folds)#5
+    Folds = pd.read_csv(args.ktxt, sep=" ", header=None)
+    K_FOLDS = len(Folds)
     
     df = pd.DataFrame(data={"filename": images_file_paths, 'mask' : labels_file_paths})
 
     for k, TEST_NAME in Folds.iterrows():
-        TEST_NAME = TEST_NAME.values
+        TEST_NAME = TEST_NAME.dropna().values
         print("Fold {}/{}".format(k+1, K_FOLDS))
         df_names = [fff for fff in df['filename'] if os.path.basename(fff).split('.png')[0] not in TEST_NAME]
         train_df = df[df['filename'].isin(df_names)]
@@ -219,11 +219,10 @@ def main(args):
     tf.keras.backend.clear_session()
         
 if __name__=="__main__":
-    
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
-	parser.add_argument("weights_folder", help='Path to output weights')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--ktxt", help='Path to k-splits txt file')
+    parser.add_argument("--weights_folder", help='Path to output weights')
+    args = parser.parse_args()
+    main(args)

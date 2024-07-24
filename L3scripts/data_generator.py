@@ -72,10 +72,9 @@ def main(args):
             print("ERROR: ", p)
 
 if __name__=="__main__":
-    
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("output_folder", help='Path to output')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--output_folder", help='Path to output')
+    args = parser.parse_args()
+    main(args)

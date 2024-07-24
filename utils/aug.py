@@ -51,7 +51,7 @@ def zoom(img, lab):
     xM=int(xM)
     yM=int(yM)
     im = img[xm:xM,ym:yM,:]
-    res = trans.resize(im, (FIXED_SIZE[0], FIXED_SIZE[1]), anti_aliasing=True)*255
+    res = trans.resize(im, (FIXED_SIZE[0], FIXED_SIZE[1]), anti_aliasing=True)*255.
     lb = lab[xm:xM,ym:yM]
     lres = trans.resize(lb, (FIXED_SIZE[0], FIXED_SIZE[1]), anti_aliasing=True)
     return res, lres

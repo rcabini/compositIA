@@ -111,7 +111,7 @@ def load_dataset(exceldir, k, WINDOW_SIZE, BATCH_SIZE):
 
 def train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE, epochs, k):
     #Add a callback for saving model
-    model_checkpoint = ModelCheckpoint(os.path.join(WEIGHTS_DIR, 'Unet_kfold{}.hdf5'.format(k)), monitor='val_mean_absolute_error',verbose=1, save_best_only=True)
+    model_checkpoint = ModelCheckpoint(os.path.join(WEIGHTS_DIR, 'multires_kfold{}.hdf5'.format(k)), monitor='val_mean_absolute_error',verbose=1, save_best_only=True)
     model.compile(loss="mean_squared_error", optimizer=Adam(learning_rate = 1e-3), metrics=["mean_absolute_error"])
     
     STEPS_PER_EPOCH = DATASET_SIZE[0] // BATCH_SIZE
@@ -133,11 +133,11 @@ def train_model(model, train_gen, val_gen, BATCH_SIZE, WEIGHTS_DIR, DATASET_SIZE
 
 def main(args):    
     tf.keras.backend.clear_session()
-    DATA_PATH = os.path.join(args.data_folder, "dataset.txt")
+    DATA_PATH = os.path.join(args.data_folder, "dataset.xlsx")
     WEIGHTS_DIR = args.weights_folder
     os.makedirs(WEIGHTS_DIR, exist_ok=True)
-    Folds = pd.read_csv(args.ktxt_folder, sep=" ", header=None)
-    K_FOLDS = len(Folds)#5
+    Folds = pd.read_csv(args.ktxt, sep=" ", header=None)
+    K_FOLDS = len(Folds)
         
     BATCH_SIZE = 4
     EPOCHS = 800
@@ -145,7 +145,7 @@ def main(args):
     
     for k, TEST_NAME in Folds.iterrows():
         print("Fold {}/{}".format(k+1, K_FOLDS))
-        TEST_NAME = TEST_NAME.values
+        TEST_NAME = TEST_NAME.dropna().values
     
         train_gen, val_gen, DATASET_SIZE = load_dataset(DATA_PATH, k, (WINDOW_SIZE[0],WINDOW_SIZE[1]), BATCH_SIZE)
         model = MultiResUnet(height=WINDOW_SIZE[0], width=WINDOW_SIZE[1], n_channels=WINDOW_SIZE[2])
@@ -167,14 +167,12 @@ def main(args):
     tf.keras.backend.clear_session()
     
 if __name__=="__main__":
-    
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("ktxt_folder", help='Path to k-splits txt file')
-	parser.add_argument("weights_folder", help='Path to output weights')
-	parser.add_argument("output_folder", help='Path to output')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--ktxt", help='Path to k-splits txt file')
+    parser.add_argument("--weights_folder", help='Path to output weights')
+    args = parser.parse_args()
+    main(args)
     
     

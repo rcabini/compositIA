@@ -25,15 +25,15 @@ def readData(fn, order):
     header = medical_image.header
     volume = medical_image.get_fdata()  # Convert to nparray
     spacing = [header['pixdim'][1],header['pixdim'][2],header['pixdim'][3]] #there is an offset of 1
-    #Check if the volume is 512x512, if not raise exception
+    #Check if the volume is 512x512, if not resampling
     if volume.shape[0] != 512 or volume.shape[1] != 512:
         shape_old = volume.shape
         spacing = [spacing[0]/512*volume.shape[0], spacing[1]/512*volume.shape[1], spacing[2]]
         volume = skimage.transform.resize(volume, (512, 512, volume.shape[-1]), anti_aliasing=True, order=order)
         print("{} has non standard resolution! Rehsaped from {} to {}".format(fn, shape_old, volume.shape))
+        #Check if the volume is 512x512, if not raise exception
         if volume.shape[0] != 512 or volume.shape[1] != 512:
             raise Exception("{} has non standard resolution!".format(fn))
-    print(volume.shape)
     return (volume, spacing)
 
 def resize(projection, spacing):

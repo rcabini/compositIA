@@ -43,8 +43,8 @@ def import_images(img_path, seg_path, img_save_path, seg_save_path, prefix = "pr
 
             rgb_img = windower(s_img, -1024, 500)
             
-            io.imsave(os.path.join(seg_save_path,prefix+'.png'),rgb_seg.astype(np.uint8))
-            io.imsave(os.path.join(img_save_path,prefix+'.png'),img_as_ubyte(rgb_img.astype(np.uint8)))
+            io.imsave(os.path.join(seg_save_path,prefix+'.png'),rgb_seg.astype(np.uint8), check_contrast=False)
+            io.imsave(os.path.join(img_save_path,prefix+'.png'),img_as_ubyte(rgb_img.astype(np.uint8)), check_contrast=False)
         else: print(prefix, "Shape mismatch")
     else: print(prefix, "Segmentation not found, stopping")
     
@@ -69,10 +69,9 @@ def main(args):
             print("ERROR: ", base, p)
 
 if __name__=="__main__":
-
     """Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("data_folder", help='Path to dataset')
-	parser.add_argument("output_folder", help='Path to output')
-	args = parser.parse_args()
-	main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_folder", help='Path to dataset')
+    parser.add_argument("--output_folder", help='Path to output')
+    args = parser.parse_args()
+    main(args)

@@ -1,256 +1,205 @@
-import sys, os 
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
-import numpy as np
-import cv2
-import tensorflow as tf
-import nibabel as nib
-import matplotlib.pyplot as plt
-from skimage import io
-import skimage.transform
 import argparse
-from slicer.windowed_utils import *
-from L3scripts.model_depth_4 import dice_coef
-from L3scripts.data_generator import windower
-from plots import plotL1, plotL3, plotL1L3
+import sys, os, json
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from glob import glob
+import pandas as pd
+from scipy import ndimage
+import skimage.transform as trans
+from skimage.feature import peak_local_max
+from utils.windowed_utils import *
+from utils.windower import windower
+from utils.plots import plotL1, plotL3, draw_center
+from L3scripts.model_L3 import dice_coef
+
+FIXED_SIZE = (512, 1024, 3)
+INPUT_SIZE = (128, 256, 3)
+
+#---------------------------------------------------------------------------
+
+def scores(VAT_s, SAT_s, SMA_s, L1_s, L1, L3, spacing, outFolder, suffix=""):
+    ## Compute scores
+    # calculate the scores and write them as a list 
+    # of numbers separated by , in DATA_DIR+'/'+'scores.txt'
+    areaL3SAT = np.sum(SAT_s.flatten())*(spacing[0]*spacing[0])*0.01
+    densitystdL3SAT = np.std(L3[SAT_s==1])
+    areaL3VAT = np.sum(VAT_s.flatten())*(spacing[0]*spacing[0])*0.01
+    areaL3SMA = np.sum(SMA_s.flatten())*(spacing[0]*spacing[0])*0.01
+    
+    L1_slice_spungiosa = L1[L1_s==1]
+    densitystdL1spungiosa = np.std(L1_slice_spungiosa)
+    densityavgL1spungiosa = np.mean(L1_slice_spungiosa)
+    areaL1spungiosa = np.sum(L1_s)*(spacing[0]*spacing[0])*0.01
+    strScores = {"densityavgL1spungiosa": str(round(densityavgL1spungiosa, 1)),
+                 "densitystdL1spungiosa": str(round(densitystdL1spungiosa, 1)),
+                 "areaL1spungiosa":       str(round(areaL1spungiosa, 1)),
+                 "areaL3SAT":             str(round(areaL3SAT, 1)),
+                 "areaL3SMA":             str(round(areaL3SMA,1)),
+                 "areaL3VAT":             str(round(areaL3VAT,1)),
+                 "densitystdL3SAT":       str(round(densitystdL3SAT, 1))}
+    with open(outFolder+ os.path.sep +'scores{}.json'.format(suffix), 'w') as f:
+        json.dump(strScores, f, indent=4)
+    return strScores
+
+#---------------------------------------------------------------------------
+
+def projection(volume, spacing):
+    #extract sagital & coronal projections, scaled and save a preview in the input folder
+    sagital = extract_images(volume, axis=0, spacing=spacing) #Sagital
+    sagital = np.flipud(sagital)
+    
+    if sagital.shape[1] >= FIXED_SIZE[1]:
+        sagital = sagital[:, :FIXED_SIZE[1],:]
+    elif sagital.shape[1] < FIXED_SIZE[1]:
+        sagital = np.pad(sagital, ((0,0),(0,FIXED_SIZE[1]-sagital.shape[1]),(0,0)), mode='edge')
+    return sagital
+
+#---------------------------------------------------------------------------
+
+def extract_seg_slice(seg):
+    try:
+        L1 = ndimage.center_of_mass(seg==1)
+        L1 = (int(round(L1[0])),int(round(L1[1])),int(round(L1[2])))
+        L3 = ndimage.center_of_mass(seg==3)
+        L3 = (int(round(L3[0])),int(round(L3[1])),int(round(L3[2])))
+    except:
+        L1 = [None,None,None]
+        L3 = [None,None,None]
+    return L1, L3
+
+#---------------------------------------------------------------------------
+
+def import_images(img_path):
+    ## Read the nifti image
+    (img, spacing) = readData(img_path, order=3)
+    ## Read the nifti segmentation## Save projections: extract the 3 windowed channels and resize the image to be isotropic
+    sagital = projection(img, spacing)
+    return sagital, img, spacing
 
 #---------------------------------------------------------------------------------------------
 
-def selectSlices(projection, results, jdata, DATA_DIR, SZ_VOTING_SPACE=[512, 1024]):
-	# Calculates the position of the L1 and L3 vertebrae from the distances estimated by the NN. 
-	# Input: distance of the window centers to the L1/L3 position; 
-	# Output: position of L1 and L3 as index in the voting space 
-	# (these indexes will have to be transformed into the original size of the CT).
-	voting_L1_coronal = np.zeros(SZ_VOTING_SPACE)
-	voting_L1_sagital = np.zeros(SZ_VOTING_SPACE)
-	voting_L3_coronal = np.zeros(SZ_VOTING_SPACE)
-	voting_L3_sagital = np.zeros(SZ_VOTING_SPACE)
-	votes_sagital_L1, votes_sagital_L3, votes_coronal_L1, votes_coronal_L3 = 0, 0, 0, 0
-	#Reconstruct votes
-	rr = 0
-	for filename in jdata.keys():
-		imgtype = jdata[filename]["type"]
-		center_x = jdata[filename]["center_x"]
-		center_y = jdata[filename]["center_y"]
-			
-		# Convert predictions to points that fit in the map
-		pred_L1_x = max(0, min(SZ_VOTING_SPACE[1]-1, round(center_x+results[rr][0]))) #TODO: discard votes outside image
-		pred_L3_x = max(0, min(SZ_VOTING_SPACE[1]-1, round(center_x+results[rr][1]))) #TODO: check if x and y are correct
-		pred_L1_y = max(0, min(SZ_VOTING_SPACE[0]-1, round(center_y+results[rr][2])))
-		pred_L3_y = max(0, min(SZ_VOTING_SPACE[0]-1, round(center_y+results[rr][3])))
-		
-		print("{} ->  {}: C_l1_s -> ({},{})".format(filename,results[rr],pred_L1_y, pred_L1_x))
-			
-		if(imgtype == "sagital"):
-			voting_L1_sagital[pred_L1_y, pred_L1_x] = voting_L1_sagital[pred_L1_y, pred_L1_x] + 1
-			votes_sagital_L1 += 1
-			voting_L3_sagital[pred_L3_y, pred_L3_x] = voting_L3_sagital[pred_L3_y, pred_L3_x] + 1
-			votes_sagital_L3 += 1
-		else:
-			voting_L1_coronal[pred_L1_y, pred_L1_x] = voting_L1_coronal[pred_L1_y, pred_L1_x] + 1
-			votes_coronal_L1 += 1
-			voting_L3_coronal[pred_L3_y, pred_L3_x] = voting_L3_coronal[pred_L3_y, pred_L3_x] + 1
-			votes_coronal_L3 += 1
-		rr = rr + 1
+def L3segmentation(img, outFolder, model):
+    # U-net to segment the CT slice at the L3 spinal level in the following regions: 
+    # visceral adipose tissue (VAT), subcutaneous adipose tissue (SAT), skeletal muscle area (SMA).
+    rgb_img = np.zeros((img.shape[0], img.shape[1], 3))
+    rgb_img[:,:,0] = windower(img, -1024, 2048)
+    rgb_img[:,:,1] = windower(img, -190, -30)
+    rgb_img[:,:,2] = windower(img, 40, 100)
 
-	scoresL1s = voting_L1_sagital/votes_sagital_L1
-	scoresL1c = voting_L1_coronal/votes_coronal_L1
-	scoresL3s = voting_L3_sagital/votes_sagital_L3
-	scoresL3c = voting_L3_coronal/votes_coronal_L3
+    im_width, im_height = img.shape #(512, 512)
+    
+    X = np.zeros((1, im_height, im_width, 3), dtype=np.float32)
+    X[0,:,:,:] = rgb_img/255.
+    X = skimage.transform.resize(X, (1, im_width, im_height, 3), mode='constant',cval=0,anti_aliasing=True,preserve_range=True,order=3)
 
-	## Save images with votes
-	#plt.imsave(DATA_DIR+os.path.sep + 'test_L1_sag.png',scoresL1s,cmap='gray')
-	#plt.imsave(DATA_DIR+os.path.sep+'test_L3_sag.png',scoresL3s,cmap='gray')
-	#plt.imsave(DATA_DIR+os.path.sep + 'test_L1_cor.png',scoresL1c,cmap='gray')
-	#plt.imsave(DATA_DIR+os.path.sep+'test_L3_cor.png',scoresL3c,cmap='gray')
-	
-	W = projection.shape[1]
-	scoresL1s = scoresL1s[:, 0:W]
-	scoresL1c = scoresL1c[:, 0:W]
-	scoresL3s = scoresL3s[:, 0:W]
-	scoresL3c = scoresL3c[:, 0:W]
+    results = model.predict(X, verbose=0)
+    results = skimage.transform.resize(results, (1, im_height, im_width, results.shape[-1]), 
+                                       mode='constant', cval=0, anti_aliasing=True,
+                                       preserve_range=True, order=0)
+    res_seg = np.round(results)[0,:,:,:]
+    
+    # Set the pixels on the edges left/right to zero with a thickness of 20 pixels 
+    thickness = 20
+    res_seg[:, :thickness, 1:] = 0  # Left edge
+    res_seg[:, -thickness:, 1:] = 0  # Right edge
 
-	scoresL1s_smoothed = cv2.GaussianBlur(scoresL1s, ksize=(0, 0), sigmaX=5, borderType=cv2.BORDER_REPLICATE)
-	scoresL1c_smoothed = cv2.GaussianBlur(scoresL1c, ksize=(0, 0), sigmaX=5, borderType=cv2.BORDER_REPLICATE)
-	scoresL3s_smoothed = cv2.GaussianBlur(scoresL3s, ksize=(0, 0), sigmaX=5, borderType=cv2.BORDER_REPLICATE)
-	scoresL3c_smoothed = cv2.GaussianBlur(scoresL3c, ksize=(0, 0), sigmaX=5, borderType=cv2.BORDER_REPLICATE)
-
-	(pred_L1s, val), row = max(map(lambda x: (max(enumerate(x[1]), key= lambda x: x[1]), x[0]), enumerate(scoresL1s_smoothed)), key=lambda x: x[0][1])
-	(col, val), pred_L1c = max(map(lambda x: (max(enumerate(x[1]), key= lambda x: x[1]), x[0]), enumerate(scoresL1c_smoothed)), key=lambda x: x[0][1])
-	(pred_L3s, val), row = max(map(lambda x: (max(enumerate(x[1]), key= lambda x: x[1]), x[0]), enumerate(scoresL3s_smoothed)), key=lambda x: x[0][1])
-	(col, val), pred_L3c = max(map(lambda x: (max(enumerate(x[1]), key= lambda x: x[1]), x[0]), enumerate(scoresL3c_smoothed)), key=lambda x: x[0][1])
-
-	#plt.imsave(DATA_DIR+os.path.sep+'test_L1_sag_smoothed.png',scoresL1s_smoothed,cmap='gray')
-	#plt.imsave(DATA_DIR+os.path.sep+'test_L1_cor_smoothed.png',scoresL1c_smoothed,cmap='gray')
-	#plt.imsave(DATA_DIR+os.path.sep+'test_L3_sag_smoothed.png',scoresL3s_smoothed,cmap='gray')
-	#plt.imsave(DATA_DIR+os.path.sep+'test_L3_cor_smoothed.png',scoresL3c_smoothed,cmap='gray')
-
-	# save an image with the projection and an overlay with the votes
-	plotL1L3(projection[:SZ_VOTING_SPACE[0],:SZ_VOTING_SPACE[1],0], scoresL1s_smoothed, scoresL3s_smoothed, DATA_DIR)
-	
-	return pred_L1s, pred_L1c, pred_L3s, pred_L3c
+    plotL3(img, res_seg, outFolder)
+    vat, sat, sma = res_seg[:,:,1].astype(int), res_seg[:,:,2].astype(int), res_seg[:,:,3].astype(int)
+    return vat, sat, sma
 
 #---------------------------------------------------------------------------------------------
 
-def slicer(volume, spacing, folder, DATA_DIR, MODEL_FILE):
-	# Extracts L1 and L3 slices from the whole CT volume. 
-	# Input: CT volume; 
-	# Output: L1 and L3 slices.
-	print("==== Selecting slices ====")
-	## Save projections
-	sagital, coronal = save_projections(folder, volume, spacing)
-	## INITIALIZATION
-	tf.keras.backend.clear_session()
-	# Prepare and save sliding windows
-	CATALOGUE, TEST_SET, jdata = createWindows(folder, ((0,0), (0,0), (0,0), (0,0)))
-	# Predicts the values for the windows in the test set
-	print('Loading model ... ')
-	model = tf.keras.models.load_model(MODEL_FILE)
-	print(' ... Loaded!')
-	results = model.predict(TEST_SET, batch_size=24, workers=4, verbose=1)
-	# Select slices
-	pred_L1s, pred_L1c, pred_L3s, pred_L3c = selectSlices(sagital, results, jdata, DATA_DIR)
-	#TODO: save an image with the projection and an overlay with the votes
-	print("L1s: "+str(pred_L1s)+"\tL1c: "+str(pred_L1c)+"\tL3s: "+str(pred_L3s)+"\tL3c: "+str(pred_L3c))
+def L1segmentation(img, outFolder, model):
+    # U-net to segment the CT slice at the L1 spinal level in the following regions: 
+    # L1 Spungiosa area and L1 Cortical area.
+    im_width, im_height = img.shape #(512, 512)
+    
+    X = np.zeros((1, im_height, im_width, 1), dtype=np.float32)
+    X[0,:,:,0] = windower(img, -1024, 500)/255. #windower(img, img.min(), img.max()) / 255
 
-	# using sagital values. not sure why coronal does not work
-	L1idx = round(pred_L1s*spacing[0]/spacing[2])
-	print("L1 idx: "+str(L1idx))
-	L1_slice = volume[:,:,L1idx]
+    results = model.predict(X, verbose=0)
+    res_seg = np.round(results)[0,:,:,:]
+    
+    # Set the pixels on the edges to zero with a thickness of 20 pixels
+    thickness = 20
+    res_seg[:thickness, :, 1:] = 0  # Top edge
+    res_seg[-thickness:, :, 1:] = 0  # Bottom edge
+    res_seg[:, :thickness, 1:] = 0  # Left edge
+    res_seg[:, -thickness:, 1:] = 0  # Right edge
 
-	L3idx = round(pred_L3s*spacing[0]/spacing[2])
-	print("L3 idx: "+str(L3idx))
-	L3_slice = volume[:,:,L3idx]
+    plotL1(np.fliplr(img), np.fliplr(res_seg), outFolder)
+    cort, spun = np.fliplr(res_seg[:,:,2].astype(int)), np.fliplr(res_seg[:,:,1].astype(int))
+    return cort, spun
 
-	plt.imsave(DATA_DIR+os.path.sep+'L3slice.png',L3_slice,cmap='gray')
-	plt.imsave(DATA_DIR+os.path.sep+'L1slice.png',L1_slice,cmap='gray')
+#---------------------------------------------------------------------------
 
-	return L1_slice, L3_slice
+def process(MODEL_SLICE, MODEL_L1, MODEL_L3, img_path, outFolder):
+      
+    # Read the nifti image
+    sagital, volume, spacing = import_images(img_path)
 
-#---------------------------------------------------------------------------------------------
-
-def L3segmentation(img, DATA_DIR, MODEL_L3):
-	# U-net to segment the CT slice at the L3 spinal level in the following regions: 
-	# visceral adipose tissue (VAT), subcutaneous adipose tissue (SAT), skeletal muscle area (SMA).
-	print("==== L3 Segmentation ====")
-	rgb_img = np.zeros((img.shape[0], img.shape[1], 3))
-	rgb_img[:,:,0] = windower(img, -1024, 2048)
-	rgb_img[:,:,1] = windower(img, -190, -30)
-	rgb_img[:,:,2] = windower(img, 40, 100)
-
-	im_width, im_height = img.shape #(512, 512)
-	input_size = (256, 256)
-
-	print('Loading model ... ')
-	model = tf.keras.models.load_model(MODEL_L3, custom_objects={"dice_coef": dice_coef })
-	print(' ... Loaded!')
-	X = np.zeros((1, im_height, im_width, 3), dtype=np.float32)
-	X[0,:,:,:] = rgb_img / 255
-	X = skimage.transform.resize(X, (1, input_size[0], input_size[1], 3), mode='constant',cval=0,anti_aliasing=True,preserve_range=True,order=3)
-
-	results = model.predict(X, verbose=1)
-	results = skimage.transform.resize(results, (1, im_height, im_width, results.shape[-1]),mode='constant',cval=0,anti_aliasing=True,preserve_range=True,order=0)
-	res_seg = np.round(results)[0,:,:,:]
-
-	#plt.imsave(DATA_DIR+'/VAT.png', res_seg[:,:,1], cmap='gray')
-	#plt.imsave(DATA_DIR+'/SAT.png', res_seg[:,:,2], cmap='gray')
-	#plt.imsave(DATA_DIR+'/SMA.png', res_seg[:,:,3], cmap='gray')
-
-	plotL3(img, res_seg, DATA_DIR)
-	vat, sat, sma = res_seg[:,:,1].astype(int), res_seg[:,:,2].astype(int), res_seg[:,:,3].astype(int)
-	return vat, sat, sma
-
-#---------------------------------------------------------------------------------------------
-
-def L1segmentation(img, DATA_DIR, MODEL_L1):
-	# U-net to segment the CT slice at the L1 spinal level in the following regions: 
-	# L1 Spungiosa area and L1 Cortical area.
-	print("==== L1 Segmentation ====")
-	im_width, im_height = img.shape #(512, 512)
-
-	print('Loading model ... ')
-	model = tf.keras.models.load_model(MODEL_L1, custom_objects={"dice_coef": dice_coef })
-	print(' ... Loaded!')
-	X = np.zeros((1, im_height, im_width, 1), dtype=np.float32)
-	X[0,:,:,0] = windower(img, -1024, 500) / 255 #windower(img, img.min(), img.max()) / 255
-
-	results = model.predict(X, verbose=1)
-	res_seg = np.round(results)[0,:,:,:]
-
-	plotL1(img, res_seg, DATA_DIR)
-	#plt.imsave(DATA_DIR+'/pred_L1.png', res_seg, cmap='gray')
-	cort, spun = res_seg[:,:,2].astype(int), res_seg[:,:,1].astype(int)
-	return cort, spun
-
-#---------------------------------------------------------------------------------------------
+    X = np.zeros((1, FIXED_SIZE[0], FIXED_SIZE[1], FIXED_SIZE[2]), dtype=np.float32)
+    X[0,:,:,:] = sagital.squeeze()/255.
+    X = trans.resize(X, (1, INPUT_SIZE[0], INPUT_SIZE[1], INPUT_SIZE[2]), anti_aliasing=True)
+    # Predict 
+    results = MODEL_SLICE.predict(X, verbose=0)
+    results = trans.resize(results, (1, FIXED_SIZE[0], FIXED_SIZE[1], results.shape[-1]), anti_aliasing=True)
+    results = (results-results.min())/(results.max()-results.min())
+    res = results[0,:,:,0]*255.
+    
+    # Save prediction
+    #plt.imsave(os.path.join(outFolder,'prediction.png'),res.astype(np.uint8))
+    # Find Local Maxima                
+    [pr_L3y, pr_L3x], [pr_L1y, pr_L1x] = peak_local_max(res, min_distance=10, num_peaks=2)
+    if pr_L1x<pr_L3x:
+        pr_L1x, pr_L3x = pr_L3x, pr_L1x
+        pr_L1y, pr_L3y = pr_L3y, pr_L1y
+    centers = ((pr_L1x, pr_L1y), (pr_L3x, pr_L3y))
+    # Draw ceneters
+    draw_center(sagital[:,:,0], res, centers, outFolder)
+        
+    L1_slice = volume[:,:,round(centers[0][0]*spacing[0]/spacing[2])]
+    L3_slice = volume[:,:,round(centers[1][0]*spacing[0]/spacing[2])]
+    # Save slices
+    plt.imsave(outFolder+os.path.sep+'L3slice.png',L3_slice,cmap='gray')
+    plt.imsave(outFolder+os.path.sep+'L1slice.png',L1_slice,cmap='gray')
+    ## L1 segmentation
+    cort, L1_mask = L1segmentation(np.fliplr(L1_slice), outFolder, MODEL_L1)
+    ## L3 segmentation
+    VAT_mask, SAT_mask, SMA_mask = L3segmentation(L3_slice, outFolder, MODEL_L3)
+    # Compute scores
+    predScores = scores(VAT_mask, SAT_mask, SMA_mask, L1_mask, L1_slice, L3_slice, spacing, outFolder)
+       
+    return predScores
+    
+#---------------------------------------------------------------------------
 
 def main(args):
-	## Get the file to process
-	fn = args.image_path
-	if(not os.path.exists(fn)):
-		raise RuntimeError("File {} not found!".format(fn))
-	folder = os.path.join(os.path.dirname(fn),os.path.basename(fn[0:-7]))
 
-	## SETTINGS
-	DATA_DIR = os.path.join(folder,'windows')
-	MODEL_SLICE    = './slicer/weights/VGG_19.hdf5' #'/var/www/html/compositia/proc/VGG_19.hdf5'
-	MODEL_L1       = './L1scripts/weights/unet_DB1_mcL1.hdf5' #'/var/www/html/compositia/proc/unet_DB1_mcL1.hdf5'
-	MODEL_L3       = './L3scripts/weights/unet_DB1_multi.hdf5' #'/var/www/html/compositia/proc/unet_DB1_multi_256.hdf5'
-	OUT_SUB_FOLDER = 'windows'
-	
-	output_folder = folder +  os.path.sep + OUT_SUB_FOLDER
-	if not os.path.exists(folder):
-		os.mkdir(folder)
-	if not os.path.exists(output_folder):
-		os.mkdir(output_folder)
+    img_path = args.input_path
+    out_path = args.output_folder
+    os.makedirs(out_path, exist_ok=True)
+    WEIGHTS_SLICE = args.weights_slicer
+    WEIGHTS_L1 = args.weights_L1
+    WEIGHTS_L3 = args.weights_L3
+    
+    print('Loading models ... ')
+    MODEL_SLICE = tf.keras.models.load_model(WEIGHTS_SLICE)
+    MODEL_L1 = tf.keras.models.load_model(WEIGHTS_L1, custom_objects={"dice_coef": dice_coef })
+    MODEL_L3 = tf.keras.models.load_model(WEIGHTS_L3, custom_objects={"dice_coef": dice_coef })
 
-	## Read the nifti image
-	(volume, spacing) = readData(fn)
-	print(volume.shape)
-	
-	## predict L1 and L3 slices
-	L1_slice, L3_slice = slicer(volume, spacing, folder, DATA_DIR, MODEL_SLICE)
-	## L1 segmentation
-	cort, L1_mask = L1segmentation(np.fliplr(L1_slice), DATA_DIR, MODEL_L1)
-	## L3 segmentation
-	VAT_mask, SAT_mask, SMA_mask = L3segmentation(L3_slice, DATA_DIR, MODEL_L3)
-	
-	## Compute scores
-	# calculate the scores and write them as a list 
-	# of numbers separated by , in DATA_DIR+'/'+'scores.txt'
-	areaL3SAT = np.sum(SAT_mask.flatten())*(spacing[0]*spacing[0])*0.01
-	densitystdL3SAT = np.std(L3_slice[SAT_mask==1].flatten())
-	areaL3VAT = np.sum(VAT_mask.flatten())*(spacing[0]*spacing[0])*0.01
-	areaL3SMA = np.sum(SMA_mask.flatten())*(spacing[0]*spacing[0])*0.01
-
-	L1_slice_spungiosa = L1_slice[L1_mask==1]
-	densitystdL1spungiosa = np.std(L1_slice_spungiosa.flatten())
-	densityavgL1spungiosa = np.mean(L1_slice_spungiosa.flatten())
-	print(L1_slice[L1_mask==1].mean())
-	print(L3_slice[SAT_mask==1].mean())
-	print(L3_slice[SMA_mask==1].mean())
-	print(L3_slice[VAT_mask==1].mean())
-	areaL1spungiosa = np.sum(L1_mask.flatten())*(spacing[0]*spacing[0])*0.01
-
-	strScores = str(round(densityavgL1spungiosa, 1))+" "+ \
-	            str(round(densitystdL1spungiosa, 1))+" "+ \
-			    str(round(areaL1spungiosa, 1))+" "+ \
-			    str(round(areaL3SAT, 1))+" "+ \
-			    str(round(areaL3SMA,1))+" "+ \
-			    str(round(areaL3VAT,1))+" "+ \
-			    str(round(densitystdL3SAT, 1))
-	print(DATA_DIR+'/'+'scores.txt')
-	f = open(DATA_DIR+'/'+'scores.txt', "w")
-	f.write(strScores)
-	f.close()
-
+    predScores = process(MODEL_SLICE, MODEL_L1, MODEL_L3, img_path, out_path)
+    print(predScores)
 
 if __name__=="__main__":
+    """Read command line arguments"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_path", help='Path to NiFTI volume')
+    parser.add_argument("--output_folder", help='Path to output')
+    parser.add_argument("--weights_slicer", help='Path to weights slicer', default='./slicer/weights/multires.hdf5')
+    parser.add_argument("--weights_L1", help='Path to weights L1 segmentation', default='./slicer/weights/unet_L1.hdf5')
+    parser.add_argument("--weights_L3", help='Path to weights L3 segmentation',default='./slicer/weights/unet_L3.hdf5')
+    args = parser.parse_args()
+    main(args)
 
-	"""Read command line arguments"""
-	parser = argparse.ArgumentParser()
-	parser.add_argument("image_path", help='enter image path')
-	args = parser.parse_args()
-	main(args)
-
-	#fn = '../DataNIFTI/Images/BC041/data.nii.gz'
-	#main(fn)
