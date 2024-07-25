@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright 2024 dp-lab Università della Svizzera Italiana
+
 import os, sys
 sys.path.insert(0,'../')
 import nibabel as nib

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright 2024 dp-lab Università della Svizzera Italiana
+
 import tensorflow as tf
 from tensorflow.keras.layers import *
 from tensorflow.keras.optimizers import Adam
