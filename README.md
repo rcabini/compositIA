@@ -139,3 +139,6 @@ To run the complete CompositIA tool by using custom weights, please run:
                          --weights_L3 path_to_weights_L3/weights.hdf5
 
 Replace the paths with the appropriate paths to your custom weight files.
+
+## License
+CompositIA is licensed under the EUPL-1.2 license. See the file LICENSE for more details.
