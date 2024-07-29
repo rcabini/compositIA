@@ -41,7 +41,7 @@ def scores(VAT_s, SAT_s, SMA_s, L1_s, L1, L3, spacing, outFolder, suffix=""):
                  "areaL3SMA":             str(round(areaL3SMA,1)),
                  "areaL3VAT":             str(round(areaL3VAT,1)),
                  "densitystdL3SAT":       str(round(densitystdL3SAT, 1))}
-    with open(outFolder+ os.path.sep +'scores{}.json'.format(suffix), 'w') as f:
+    with open(os.path.join(outFolder, 'scores{}.json'.format(suffix)), 'w') as f:
         json.dump(strScores, f, indent=4)
     return strScores
 

@@ -4,7 +4,7 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from L3scripts.data_generator import windower
+from .windower import windower
 
 #---------------------------------------------------------------------------
 
