@@ -165,8 +165,8 @@ def process(MODEL_SLICE, MODEL_L1, MODEL_L3, img_path, outFolder):
     L1_slice = volume[:,:,round(centers[0][0]*spacing[0]/spacing[2])]
     L3_slice = volume[:,:,round(centers[1][0]*spacing[0]/spacing[2])]
     # Save slices
-    plt.imsave(outFolder+os.path.sep+'L3slice.png',L3_slice,cmap='gray')
-    plt.imsave(outFolder+os.path.sep+'L1slice.png',L1_slice,cmap='gray')
+    plt.imsave(os.path.join(outFolder,'L3slice.png'),L3_slice,cmap='gray')
+    plt.imsave(os.path.join(outFolder,'L1slice.png'),L1_slice,cmap='gray')
     ## L1 segmentation
     cort, L1_mask = L1segmentation(np.fliplr(L1_slice), outFolder, MODEL_L1)
     ## L3 segmentation
