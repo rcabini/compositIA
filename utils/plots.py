@@ -15,7 +15,7 @@ def draw_center(buff_s, results, centers, DATA_DIR):
     plt.plot(centers[0][0],centers[0][1],'cx', linewidth=7.0)
     plt.plot(centers[1][0],centers[1][1],'bx', linewidth=7.0)
     plt.axis("off")
-    plt.savefig(os.path.join(DATA_DIR,'planes.png'))
+    plt.savefig(os.path.join(DATA_DIR,'planes.png'), bbox_inches='tight')
 
 #---------------------------------------------------------------------------
 
