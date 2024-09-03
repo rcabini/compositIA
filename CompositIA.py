@@ -34,13 +34,13 @@ def scores(VAT_s, SAT_s, SMA_s, L1_s, L1, L3, spacing, outFolder, suffix=""):
     densitystdL1spungiosa = np.std(L1_slice_spungiosa)
     densityavgL1spungiosa = np.mean(L1_slice_spungiosa)
     areaL1spungiosa = np.sum(L1_s)*(spacing[0]*spacing[0])*0.01
-    strScores = {"densityavgL1spungiosa": str(round(densityavgL1spungiosa, 1)),
-                 "densitystdL1spungiosa": str(round(densitystdL1spungiosa, 1)),
-                 "areaL1spungiosa":       str(round(areaL1spungiosa, 1)),
-                 "areaL3SAT":             str(round(areaL3SAT, 1)),
-                 "areaL3SMA":             str(round(areaL3SMA,1)),
-                 "areaL3VAT":             str(round(areaL3VAT,1)),
-                 "densitystdL3SAT":       str(round(densitystdL3SAT, 1))}
+    strScores = {"L1BMDavg":                str(round(densityavgL1spungiosa, 1)),
+                 "L1BMDstd":                str(round(densitystdL1spungiosa, 1)),
+                 "L1trabecularbonearea":    str(round(areaL1spungiosa, 1)),
+                 "L3SATarea":               str(round(areaL3SAT, 1)),
+                 "L3SMAarea":               str(round(areaL3SMA,1)),
+                 "L3VATarea":               str(round(areaL3VAT,1)),
+                 "L3SATdensitystd":         str(round(densitystdL3SAT, 1))}
     with open(os.path.join(outFolder, 'scores{}.json'.format(suffix)), 'w') as f:
         json.dump(strScores, f, indent=4)
     return strScores

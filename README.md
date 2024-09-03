@@ -7,7 +7,7 @@ CompositIA is a fully automated tool designed to calculate body composition from
 **CompositIA** consists of three blocks:
 
 * **`MultiResUNet`** to predict CT slices intersecting the first lumbar vertebra (L1) and third lumbar vertebra (L3).
-* **`UNetL1`** to segment the L1 vertebra from the CT slice at the L1 spinal level. The L1 segmentation is composed of two different regions: spungiosa tissue (spun) and cortical tissue (cort).\
+* **`UNetL1`** to segment the L1 vertebra from the CT slice at the L1 spinal level. The L1 segmentation is composed of two different regions: trabecular bone tissue and cortical tissue.\
 **`UNetL3`** to segment the CT slice at the L3 spinal level in the following regions: visceral adipose tissue (VAT), subcutaneous adipose tissue (SAT), skeletal muscle area (SMA).
 * Quantification of body composition indices.
 
