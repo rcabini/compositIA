@@ -1,5 +1,6 @@
 # Ignore system files
 __pycache__
+*.pyc
 
 # Ignore the weight directory
 */weights
