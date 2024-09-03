@@ -20,14 +20,14 @@ All the models are developed using **Tensorflow 2**.
     
 ## Installation instructions
 
-First, create a virtual environment with Anaconda:
-```
-conda create --name comp --file requirements.txt
-conda activate comp
-```
-Clone the CompositIA repository:
-```
+First, clone the CompositIA repository:
+```bash
 git clone https://github.com/rcabini/compositIA.git
+```
+Create a virtual environment with Anaconda:
+```bash
+conda create -f enviroment.yml
+conda activate enviroment
 ```
 
 ## Train CompositIA
@@ -63,17 +63,17 @@ This command generates the `k-fold-test.txt` file, which lists the filenames of 
 To create dataset necessary to train the CompositIA tool you sholud create three different dataset for the three models:
 
 * To create dataset to train the L1/L3 localization model, please run:
-```
+```bash
   cd slicer/
   python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/slicer/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * To create dataset to train the L1 segmentation model, please run:
-```
+```bash
   cd L1scripts/
   python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/L1/
 ```
 * To create dataset to train the L3 segmentation model, please run:
-```
+```bash
   cd L3scripts/
   python data_generator.py --data_folder path_to_Dataset/ --output_folder path_to_Dataset/L3/
 ```
@@ -83,17 +83,17 @@ where `path_to_Dataset` should be replaced with the path to the Dataset folder.
 To to train the CompositIA tool you sholud train the three different models:
 
 * L1/L3 localization model training, run:
-```
+```bash
   cd slicer/
   python main_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * L1 segmentation training, run:
-```
+```bash
   cd L1scripts/
   python main_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * L3 segmentation training, run:
-```
+```bash
   cd L3scripts/
   python main_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
@@ -102,17 +102,17 @@ To to train the CompositIA tool you sholud train the three different models:
 To to test the CompositIA tool on the k-folds you sholud test the three different models:
 
 * L1/L3 localization model testing, run:
-```
+```bash
   cd slicer/
   python run_slicer_CV.py --data_folder path_to_Dataset/slicer/ --weights_folder ./weights_slicer/ --output_folder ./results_slicer/ --ktxt path_to_Dataset/k-fold-test.txt --nifti_folder ./path_to_Dataset/
 ```
 * L1 segmentation testing, run:
-```
+```bash
   cd L1scripts/
   python run_L1_CV.py --data_folder path_to_Dataset/L1/ --weights_folder ./weights_L1/ --output_folder ./results_L1/ --ktxt path_to_Dataset/k-fold-test.txt
 ```
 * L3 segmentation testing, run:
-```
+```bash
   cd L3scripts/
   python run_L3_CV.py --data_folder path_to_Dataset/L3/ --weights_folder ./weights_L3/ --output_folder ./results_L3/ --ktxt path_to_Dataset/k-fold-test.txt
 ```

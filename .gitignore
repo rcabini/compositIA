@@ -15,10 +15,10 @@ __pycache__
 *.txt
 
 # Ignore run_nifti_*
-./run_nifti_OLD.py
-./run_nifti_RAF.py
-./run_nifti_old.py
-./run_nifti_lite.py
+run_nifti_OLD.py
+run_nifti_RAF.py
+run_nifti_old.py
+run_nifti_lite.py
 .Rhistory
 app/
 
