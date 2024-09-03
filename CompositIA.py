@@ -30,13 +30,13 @@ def scores(VAT_s, SAT_s, SMA_s, L1_s, L1, L3, spacing, outFolder, suffix=""):
     areaL3VAT = np.sum(VAT_s.flatten())*(spacing[0]*spacing[0])*0.01
     areaL3SMA = np.sum(SMA_s.flatten())*(spacing[0]*spacing[0])*0.01
     
-    L1_slice_spungiosa = L1[L1_s==1]
-    densitystdL1spungiosa = np.std(L1_slice_spungiosa)
-    densityavgL1spungiosa = np.mean(L1_slice_spungiosa)
-    areaL1spungiosa = np.sum(L1_s)*(spacing[0]*spacing[0])*0.01
-    strScores = {"L1BMDavg":                str(round(densityavgL1spungiosa, 1)),
-                 "L1BMDstd":                str(round(densitystdL1spungiosa, 1)),
-                 "L1trabecularbonearea":    str(round(areaL1spungiosa, 1)),
+    L1_slice_trabecular = L1[L1_s==1]
+    densitystdL1trabecular = np.std(L1_slice_trabecular)
+    densityavgL1trabecular = np.mean(L1_slice_trabecular)
+    areaL1trabecular = np.sum(L1_s)*(spacing[0]*spacing[0])*0.01
+    strScores = {"L1BMDavg":                str(round(densityavgL1trabecular, 1)),
+                 "L1BMDstd":                str(round(densitystdL1trabecular, 1)),
+                 "L1trabecularbonearea":    str(round(areaL1trabecular, 1)),
                  "L3SATarea":               str(round(areaL3SAT, 1)),
                  "L3SMAarea":               str(round(areaL3SMA,1)),
                  "L3VATarea":               str(round(areaL3VAT,1)),
@@ -115,7 +115,7 @@ def L3segmentation(img, outFolder, model):
 
 def L1segmentation(img, outFolder, model):
     # U-net to segment the CT slice at the L1 spinal level in the following regions: 
-    # L1 Spungiosa area and L1 Cortical area.
+    # L1 Trabecular bone area and L1 Cortical area.
     im_width, im_height = img.shape #(512, 512)
     
     X = np.zeros((1, im_height, im_width, 1), dtype=np.float32)

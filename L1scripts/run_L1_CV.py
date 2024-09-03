@@ -42,10 +42,10 @@ def main(args):
     seg_path = os.path.join(args.data_folder, "label/")
     res_path = os.path.join(args.output_folder, "res/")
     cort_path = os.path.join(args.output_folder, "cort/")
-    spung_path = os.path.join(args.output_folder, "spung/")
+    trab_path = os.path.join(args.output_folder, "trab/")
     os.makedirs(res_path, exist_ok=True)
     os.makedirs(cort_path, exist_ok=True)
-    os.makedirs(spung_path, exist_ok=True)
+    os.makedirs(trab_path, exist_ok=True)
     Folds = pd.read_csv(args.ktxt, sep=" ", header=None)
 
     print('Finding images ... ')
@@ -113,10 +113,10 @@ def main(args):
                 
                 res_seg = res_seg*255.
                 matplotlib.image.imsave(os.path.join(cort_path, fn), res_seg[:,:,1].astype(np.uint8),  cmap="gray")
-                matplotlib.image.imsave(os.path.join(spung_path, fn), res_seg[:,:,2].astype(np.uint8),  cmap="gray")
+                matplotlib.image.imsave(os.path.join(trab_path, fn), res_seg[:,:,2].astype(np.uint8),  cmap="gray")
             except: print("ERROR: {}".format(fn))
             
-    df = pd.DataFrame(row, columns=["filename", "k", "dice_SPUN", "dice_CORT"])
+    df = pd.DataFrame(row, columns=["filename", "k", "dice_TRAB", "dice_CORT"])
     df.to_excel(os.path.join(res_path,"DSC_L1_kfold.xlsx"), index=False)  
     
 if __name__=="__main__":
