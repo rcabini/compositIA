@@ -3,10 +3,10 @@ __pycache__
 *.pyc
 
 # Ignore the weight directory
-*/weights
+#*/weights
 
 # Ignore the results directory
-*/*/
+#*/*/
 
 #Ignore xlsx
 *.xlsx
@@ -14,13 +14,7 @@ __pycache__
 #Ignore txt
 *.txt
 
-# Ignore run_nifti_*
-run_nifti_OLD.py
-run_nifti_RAF.py
-run_nifti_old.py
-run_nifti_lite.py
 .Rhistory
-app/
 
 # Ignore jupiter files
 *.ipynb

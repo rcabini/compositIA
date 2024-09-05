@@ -14,10 +14,10 @@ CompositIA is a fully automated tool designed to calculate body composition from
 **`MultiResUNet`** is based on the implementation proposed by Ibtehaz, and Sohel Rahman described in this [paper](https://www.sciencedirect.com/science/article/abs/pii/S0893608019302503?via%3Dihub). **`UNet`** is based on the implementation proposed by Ronneberger et al. detailed in the [work](https://arxiv.org/pdf/1505.04597.pdf). 
 All the models are developed using **Tensorflow 2**. 
 
-[//]:<L3 U-net weights are available at this [link](https://drive.google.com/file/d/1wUEumfrXRGFBlY6pT9z1NB1Eg9_Ni2UT/view?usp=share_link).>
+A web application with a user-friendly interface is available [here](http://www.dp-lab.io/compositia), allowing users to upload CT scans, run the analysis, and view results directly in the browser. A standalone Windows version is available for download from this link [link](http://www.dp-lab.io/compositia).
 
 [//]:<Please cite the following [paper](https://arxiv.org/) when using CompositIA:>
-    
+  
 ## Installation instructions
 
 First, clone the CompositIA repository:
