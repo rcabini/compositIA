@@ -1,4 +1,4 @@
-# CompositIA
+# CompositIA ciao
 
 CompositIA is a fully automated tool designed to calculate body composition from thoraco-abdominal computed tomography (CT) scans.
 
