@@ -26,8 +26,8 @@ git clone https://github.com/rcabini/compositIA.git
 ```
 Create a virtual environment with Anaconda:
 ```bash
-conda env create -f enviroment.yml
-conda activate enviroment
+conda env create -f environment.yml
+conda activate environment
 ```
 
 ## Train CompositIA

@@ -8,14 +8,13 @@ from .windower import windower
 
 #---------------------------------------------------------------------------
 
-def draw_center(buff_s, results, centers, DATA_DIR):
-    # Intermediate step to dar the L1 and L3 centers on a preview image for verification
-    plt.imshow(buff_s, cmap='gray')
-    plt.imshow(results, cmap='coolwarm', alpha=0.5)
-    plt.plot(centers[0][0],centers[0][1],'cx', linewidth=7.0)
-    plt.plot(centers[1][0],centers[1][1],'bx', linewidth=7.0)
-    plt.axis("off")
-    plt.savefig(os.path.join(DATA_DIR,'planes.png'), bbox_inches='tight')
+def draw_center(projection, scores_smooth, nonpadded_shape, DATA_DIR):
+    # RGB image with L1 and L3 positions
+    img = np.repeat(projection[...,None],3,axis=-1).astype(np.ubyte)
+    scores_smooth = windower(scores_smooth, scores_smooth.min(), scores_smooth.max())
+    img[:,:,0] = np.maximum(projection, scores_smooth)
+    img = img[:,:nonpadded_shape[1],:]
+    plt.imsave(os.path.join(DATA_DIR,'planes.png'),img)
 
 #---------------------------------------------------------------------------
 

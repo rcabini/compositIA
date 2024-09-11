@@ -51,12 +51,13 @@ def projection(volume, spacing):
     #extract sagital & coronal projections, scaled and save a preview in the input folder
     sagital = extract_images(volume, axis=0, spacing=spacing) #Sagital
     sagital = np.flipud(sagital)
+    nopadded_shape = sagital.shape
     
     if sagital.shape[1] >= FIXED_SIZE[1]:
         sagital = sagital[:, :FIXED_SIZE[1],:]
     elif sagital.shape[1] < FIXED_SIZE[1]:
         sagital = np.pad(sagital, ((0,0),(0,FIXED_SIZE[1]-sagital.shape[1]),(0,0)), mode='edge')
-    return sagital
+    return sagital, nopadded_shape
 
 #---------------------------------------------------------------------------
 
@@ -77,8 +78,8 @@ def import_images(img_path):
     ## Read the nifti image
     (img, spacing) = readData(img_path, order=3)
     ## Save projections: extract the 3 windowed channels and resize the image to be isotropic
-    sagital = projection(img, spacing)
-    return sagital, img, spacing
+    sagital, nopadded_shape = projection(img, spacing)
+    return sagital, img, spacing, nopadded_shape
 
 #---------------------------------------------------------------------------------------------
 
@@ -140,7 +141,7 @@ def L1segmentation(img, outFolder, model):
 def process(MODEL_SLICE, MODEL_L1, MODEL_L3, img_path, outFolder):
       
     # Read the nifti image
-    sagital, volume, spacing = import_images(img_path)
+    sagital, volume, spacing, nopadded_shape = import_images(img_path)
 
     X = np.zeros((1, FIXED_SIZE[0], FIXED_SIZE[1], FIXED_SIZE[2]), dtype=np.float32)
     X[0,:,:,:] = sagital.squeeze()/255.
@@ -160,7 +161,7 @@ def process(MODEL_SLICE, MODEL_L1, MODEL_L3, img_path, outFolder):
         pr_L1y, pr_L3y = pr_L3y, pr_L1y
     centers = ((pr_L1x, pr_L1y), (pr_L3x, pr_L3y))
     # Draw ceneters
-    draw_center(sagital[:,:,0], res, centers, outFolder)
+    draw_center(sagital[:,:,0], res, nopadded_shape, outFolder)
         
     L1_slice = volume[:,:,round(centers[0][0]*spacing[0]/spacing[2])]
     L3_slice = volume[:,:,round(centers[1][0]*spacing[0]/spacing[2])]
