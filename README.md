@@ -121,7 +121,11 @@ To to test the CompositIA tool on the k-folds you sholud test the three differen
 
 To run the complete CompositIA tool on a new thoraco-abdominal CT scan, you should run:
 
-    python CompositIA.py --input_image path_to_input/data.nii.gz --output_path path_to_output/
+    python CompositIA.py --input_path path_to_input/data.nii.gz 
+                         --output_folder path_to_output/
+                         --weights_slicer path_to_weights_slicer/weights.hdf5
+                         --weights_L1 path_to_weights_L1/weights.hdf5
+                         --weights_L3 path_to_weights_L3/weights.hdf5
 
 where `path_to_input` is the path to the input NIfTI CT and `path_to_output` is the path to the output directory where all the results will be saved. The output directory includes: 
 
@@ -130,17 +134,9 @@ where `path_to_input` is the path to the input NIfTI CT and `path_to_output` is 
 * `L1slice.png` and `L3slice.png`: extracted slices of the CT scan;
 * `L1segmentation.png` and `L3segmentation.png`: segmentations predicted by CompositIA. 
 
-Weights of all the pretrained models are available [here](http://www.dp-lab.io/compositia/proc_2024/weights). 
+Replace the paths with the appropriate paths to the weight files. Weights of all the pretrained models are available [here](http://www.dp-lab.io/compositia/proc_2024/weights). 
 
-To run the complete CompositIA tool by using custom weights, please run:
-
-    python CompositIA.py --input_path path_to_input/data.nii.gz 
-                         --output_folder path_to_output/
-                         --weights_slicer path_to_weights_slicer/weights.hdf5
-                         --weights_L1 path_to_weights_L1/weights.hdf5
-                         --weights_L3 path_to_weights_L3/weights.hdf5
-
-Replace the paths with the appropriate paths to your custom weight files.
+To run the complete CompositIA tool by using custom weights replace the paths with the appropriate paths to your custom weight files.
 
 ## License
 CompositIA is licensed under the EUPL-1.2 license. See the file LICENSE for more details.

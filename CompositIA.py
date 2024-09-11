@@ -19,7 +19,7 @@ from L3scripts.model_L3 import dice_coef
 FIXED_SIZE = (512, 1024, 3)
 INPUT_SIZE = (128, 256, 3)
 
-#---------------------------------------------------------------------------c
+#---------------------------------------------------------------------------
 
 def scores(VAT_s, SAT_s, SMA_s, L1_s, L1, L3, spacing, outFolder, suffix=""):
     ## Compute scores

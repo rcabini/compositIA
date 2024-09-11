@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from .windower import windower
 
-#---------------------------------------------------------------------------c
+#---------------------------------------------------------------------------
 
 def draw_center(projection, scores_smooth, nonpadded_shape, DATA_DIR):
     # RGB image with L1 and L3 positions
