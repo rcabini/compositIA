@@ -1,5 +1,5 @@
 # This file may be used to create an environment using:
-# $ conda create --f <this file>
+# $ conda env create -f <this file>
 name: enviroment
 channels:
   - conda-forge
