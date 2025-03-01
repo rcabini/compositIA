@@ -14,9 +14,9 @@ CompositIA is a fully automated tool designed to calculate body composition from
 **`MultiResUNet`** is based on the implementation proposed by Ibtehaz, and Sohel Rahman described in this [paper](https://www.sciencedirect.com/science/article/abs/pii/S0893608019302503?via%3Dihub). **`UNet`** is based on the implementation proposed by Ronneberger et al. detailed in the [work](https://arxiv.org/pdf/1505.04597.pdf). 
 All the models are developed using **Tensorflow 2**. 
 
-A web application with a user-friendly interface is available [here](http://www.dp-lab.io/compositia), allowing users to upload CT scans, run the analysis, and view results directly in the browser. A standalone Windows version is available for download from this link [link](http://www.dp-lab.io/compositia).
+A web application with a user-friendly interface is available [here](https://www.dp-lab.info/compositia/), allowing users to upload CT scans, run the analysis, and view results directly in the browser. A standalone Windows version is available for download from this link [link](https://www.dp-lab.info/compositia/).
 
-[//]:<Please cite the following [paper](https://arxiv.org/) when using CompositIA:>
+Please cite the following [paper](https://doi.org/10.1186/s41747-025-00552-7) when using CompositIA: Cabini R.F., Cozzi A., et al. CompositIA: an open-source automated quantification tool for body composition scores from thoraco-abdominal CT scans. Eur Radiol Exp 9, 12 (2025). [https://doi.org/10.1186/s41747-025-00552-7](https://doi.org/10.1186/s41747-025-00552-7)
   
 ## Installation instructions
 
