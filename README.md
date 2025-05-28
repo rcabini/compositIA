@@ -134,7 +134,7 @@ where `path_to_input` is the path to the input NIfTI CT and `path_to_output` is 
 * `L1slice.png` and `L3slice.png`: extracted slices of the CT scan;
 * `L1segmentation.png` and `L3segmentation.png`: segmentations predicted by CompositIA. 
 
-Replace the paths with the appropriate paths to the weight files. Weights of all the pretrained models are available [here](http://www.dp-lab.io/compositia/proc_2024/weights). 
+Replace the paths with the appropriate paths to the weight files. Weights of all the pretrained models are available [here](http://compute.dp-lab.info/compositia/proc_2024/weights/). 
 
 To run the complete CompositIA tool by using custom weights replace the paths with the appropriate paths to your custom weight files.
 
